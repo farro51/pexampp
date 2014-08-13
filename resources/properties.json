@@ -1,0 +1,29 @@
+{
+    "UriBase" : "http://localhost/ponyexpress/resources/",
+    "NamespaceUriBase" : "specifications/",
+    "Resources": ["users", "alerts", "deliveries", "agents"],
+    "ResourcesConfiguration" : {
+        "ACDefault" : {
+            "DriverConnector" : "ac_persistence"
+        },
+        "Groups" : {
+            "DriverConnector" : "ac_persistence",
+            "Properties" : {
+                "DefaultGroupId" : 1
+            }
+        }
+    },
+    "Connectors" : {
+        "ac_persistence" : {
+            "Name" : "infomobilita",
+            "Properties" : {
+                "ConnectionString" : {
+                    "server" : "localhost",
+                    "dbuser" : "ponyedb",
+                    "dbpass" : "Federico01#",
+                    "dbname" : "pony_mayo_11"
+                }                
+            }
+        }
+    }
+}

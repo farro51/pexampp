@@ -1,0 +1,233 @@
+<?php
+/*
+ *  This file is part of Restos software
+ * 
+ *  Restos is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ * 
+ *  Restos is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ * 
+ *  You should have received a copy of the GNU General Public License
+ *  along with Restos.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/**
+ * Class Connector_relationaldb
+ *
+ * @author David Herney <davidherney@gmail.com>
+ * @package Laberinto.WebServices.Restos
+ * @version 0.1x|x
+ */
+class Connector_relationaldb {
+    
+    /**
+     * 
+     * Show all error messages
+     * @var integer
+     */
+    const E_ALL     = 10;
+    
+    /**
+     * 
+     * Show only debug error messages
+     * @var integer
+     */
+    const E_DEBUG   = 20;
+    
+    /**
+     * 
+     * Show short description of error messages
+     * @var integer
+     */
+    
+    const E_NORMAL  = 50;
+    
+    /**
+     * 
+     * The Data Source Name
+     * @var string
+     */
+    private $_DSN;
+    
+    /**
+     * 
+     * An associative array of option names and their values.
+     * @var array
+     */
+    private $_options = array();
+    
+    /**
+     * 
+     * Object to execute query in database
+     * @var MDB2
+     */
+    public $DB;
+    
+    /**
+     * 
+     * A level to display info about the error
+     * The levels are:
+     * - 0 : All
+     * - 1 : develop
+     * - 2 : short
+     * 
+     * @var integer
+     */
+    public static $ErrorLevel = 10;
+    
+    /**
+     * 
+     * Contruct
+     * @param string $DNS The Data Source Name
+     * @param array $options An associative array of option names and their values.
+     */
+    public function __construct($DSN, $options = array()){
+
+        include_once 'MDB2.php';
+        
+        $this->_DSN = $DSN;
+        
+        if(is_array($options)){
+            $this->_options = $options;
+        }
+        
+        $mdb2 =& MDB2::connect($this->_DSN, $this->_options);
+
+        if (PEAR::isError($mdb2)) {
+            Connector_relationaldb::throwException($mdb2);
+        }
+        
+        $mdb2->loadModule('Extended', null, false);
+        $this->DB = $mdb2;
+    }
+    
+    /**
+     * 
+     * Throw a new exception according to current error level
+     * @param PEAR error $e
+     * @throws Exception
+     */
+    public static function throwException($e){
+
+        switch (Connector_relationaldb::$ErrorLevel) {
+            case Connector_relationaldb::E_ALL:
+                $msg = $e->getMessage() . ". " . $e->getUserInfo();
+                break;
+            default:
+                $msg = $e->getMessage();
+        }
+
+        Restos::throwException(new Exception($msg, $e->getCode()));
+    }
+    
+    /**
+     * 
+     * Destruct
+     * Disconnect the data base if this is connected
+     */
+    public function __destruct(){
+
+        if ($this->DB && method_exists($this->DB,'disconnect')) {
+            $this->DB->disconnect();
+        }
+    }
+    
+    /**
+     * 
+     * Fetch the first row of data returned from a query.
+     * @param string $sql - the SQL query
+     * @param array $types - that contains the types of the columns in the result set
+     * @param array $params - if supplied, prepare/execute will be used with this array as execute parameters
+     * @param array $param_types - that contains the types of the values defined in $params
+     * @param int $fetch_mode - the fetch mode to use
+     * 
+     */
+    public function getRow($sql, $types = null, $params = array(), $param_types = null, $fetch_mode = MDB2_FETCHMODE_OBJECT) {
+        
+        $row = $this->DB->extended->getRow($sql, $types, $params, $param_types, $fetch_mode);
+
+        if (PEAR::isError($row)) {
+            Connector_relationaldb::throwException($row);
+        }
+        
+        return $row;
+    }
+    
+    /**
+     * 
+     * Fetch all the rows returned from a query.
+     * @param string $sql - the SQL query
+     * @param array $types - that contains the types of the columns in the result set
+     * @param array $params - if supplied, prepare/execute will be used with this array as execute parameters
+     * @param array $param_types - that contains the types of the values defined in $params
+     * @param int $fetch_mode - the fetch mode to use
+     * @param $rekey - if set to true, the $all will have the first column as its first dimension
+     * @param $force_array - used only when the query returns exactly two columns. If true, the values of the returned array will be one-element arrays instead of scalars.
+     * @param $group - if true, the values of the returned array is wrapped in another array. If the same key value (in the first column) repeats itself, the values will be appended to this array instead of overwriting the existing values.
+     * @return data on success, a MDB2 error on failure
+     */
+    public function getList ($sql, $types = null, $params = array(), $param_types = null, $fetch_mode = MDB2_FETCHMODE_OBJECT, $rekey = false, $force_array = false, $group = false) {
+        
+        $res = $this->DB->extended->getAll($sql, $types, $params, $param_types, $fetch_mode, $rekey, $force_array, $group);
+
+        if (PEAR::isError($res)) {
+            Connector_relationaldb::throwException($res);
+        }
+
+        return $res;
+    }
+
+    /**
+     * 
+     * Update only one record 
+     * @param string $table
+     * @param array $condition
+     * @param array $fields
+     */
+    public function update_record($table, array $fields, array $condition){
+        
+        $where = '';
+        foreach ($condition as $key=>$value) {
+            
+            $where .= $key . ' = ' . $this->DB->quote($value) . ' AND ';
+        }
+        $where = rtrim($where, ' AND ');
+        
+        if (!empty($where)) {
+            //to modify only one record
+            $this->DB->setLimit(1);
+
+            $affectedRows = $this->DB->extended->autoExecute($table, $fields, MDB2_AUTOQUERY_UPDATE, $where);
+            
+            if (PEAR::isError($affectedRows)) {
+                Connector_relationaldb::throwException($affectedRows);
+            }
+            
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 
+     * Insert one record 
+     * @param string $table
+     * @param array $fields
+     */
+    public function insert_record($table, array $fields){
+        
+        $result = $this->DB->extended->autoExecute($table, $fields, MDB2_AUTOQUERY_INSERT);
+        
+        if (PEAR::isError($result)) {
+            Connector_relationaldb::throwException($result);
+        }
+        
+        return $result;
+    }
+}

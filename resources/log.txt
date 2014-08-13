@@ -1,0 +1,222 @@
+name_s f email_s f@f.com address_s via magenta 51 name_r s email_r s@s.com address_r via gorizia 6
+'1'
+array (
+  0 => 
+  stdClass::__set_state(array(
+     'latitude' => '45.075597',
+     'longitude' => '7.64406',
+     'p_order' => '0',
+     'id_delivery' => '0',
+     'pick_up' => '0',
+  )),
+  1 => 
+  stdClass::__set_state(array(
+     'latitude' => 45.0669536999999991166987456381320953369140625,
+     'longitude' => 7.66427929999999957288991936366073787212371826171875,
+     'id_delivery' => -1,
+     'pick_up' => 1,
+     'p_order' => 1,
+  )),
+  2 => 
+  stdClass::__set_state(array(
+     'latitude' => 45.053481099999999059946276247501373291015625,
+     'longitude' => 7.64177009999999956590954752755351364612579345703125,
+     'id_delivery' => -1,
+     'pick_up' => 0,
+     'p_order' => 2,
+  )),
+)
+array (
+  0 => 
+  array (
+    0 => 0,
+    1 => 
+    stdClass::__set_state(array(
+       'distance' => 0.0219892411733567071097095180221003829501569271087646484375,
+       'pick_up_coor' => '45.075597,7.64406',
+       'dest_coor' => '45.0669537,7.6642793',
+    )),
+    2 => 
+    stdClass::__set_state(array(
+       'distance' => 0.022234133102509899548859806373002356849610805511474609375,
+       'pick_up_coor' => '45.075597,7.64406',
+       'dest_coor' => '45.0534811,7.6417701',
+    )),
+  ),
+  1 => 
+  array (
+    0 => 
+    stdClass::__set_state(array(
+       'distance' => 0.0219892411733567071097095180221003829501569271087646484375,
+       'pick_up_coor' => '45.0669537,7.6642793',
+       'dest_coor' => '45.075597,7.64406',
+    )),
+    1 => 0,
+    2 => 
+    stdClass::__set_state(array(
+       'distance' => 0.026233090466050733302605380004024482332170009613037109375,
+       'pick_up_coor' => '45.0669537,7.6642793',
+       'dest_coor' => '45.0534811,7.6417701',
+    )),
+  ),
+  2 => 
+  array (
+    0 => 
+    stdClass::__set_state(array(
+       'distance' => 0.022234133102509899548859806373002356849610805511474609375,
+       'pick_up_coor' => '45.0534811,7.6417701',
+       'dest_coor' => '45.075597,7.64406',
+    )),
+    1 => 
+    stdClass::__set_state(array(
+       'distance' => 0.026233090466050733302605380004024482332170009613037109375,
+       'pick_up_coor' => '45.0534811,7.6417701',
+       'dest_coor' => '45.0669537,7.6642793',
+    )),
+    2 => 0,
+  ),
+)
+array (
+  0 => 0,
+  1 => 1,
+  2 => 2,
+)
+DISTANCE: 
+stdClass::__set_state(array(
+   'distance' => 
+  stdClass::__set_state(array(
+     'text' => '2.0 km',
+     'value' => 2011,
+  )),
+   'duration' => 
+  stdClass::__set_state(array(
+     'text' => '25 mins',
+     'value' => 1512,
+  )),
+   'status' => 'OK',
+))
+DISTANCE: 
+stdClass::__set_state(array(
+   'distance' => 
+  stdClass::__set_state(array(
+     'text' => '2.7 km',
+     'value' => 2722,
+  )),
+   'duration' => 
+  stdClass::__set_state(array(
+     'text' => '35 mins',
+     'value' => 2083,
+  )),
+   'status' => 'OK',
+))
+name_s fede email_s fa@g.co address_s via magenta 51 name_r g email_r g@f.co address_r via gorizia 96
+'1'
+array (
+  0 => 
+  stdClass::__set_state(array(
+     'latitude' => '45.075597',
+     'longitude' => '7.64406',
+     'p_order' => '0',
+     'id_delivery' => '0',
+     'pick_up' => '0',
+  )),
+  1 => 
+  stdClass::__set_state(array(
+     'latitude' => 45.0669536999999991166987456381320953369140625,
+     'longitude' => 7.66427929999999957288991936366073787212371826171875,
+     'id_delivery' => -1,
+     'pick_up' => 1,
+     'p_order' => 1,
+  )),
+  2 => 
+  stdClass::__set_state(array(
+     'latitude' => 45.0463175000000006775735528208315372467041015625,
+     'longitude' => 7.640571399999998902785591781139373779296875,
+     'id_delivery' => -1,
+     'pick_up' => 0,
+     'p_order' => 2,
+  )),
+)
+array (
+  0 => 
+  array (
+    0 => 0,
+    1 => 
+    stdClass::__set_state(array(
+       'distance' => 0.0219892411733567071097095180221003829501569271087646484375,
+       'pick_up_coor' => '45.075597,7.64406',
+       'dest_coor' => '45.0669537,7.6642793',
+    )),
+    2 => 
+    stdClass::__set_state(array(
+       'distance' => 0.0294865978066320387485088616585926502011716365814208984375,
+       'pick_up_coor' => '45.075597,7.64406',
+       'dest_coor' => '45.0463175,7.6405714',
+    )),
+  ),
+  1 => 
+  array (
+    0 => 
+    stdClass::__set_state(array(
+       'distance' => 0.0219892411733567071097095180221003829501569271087646484375,
+       'pick_up_coor' => '45.0669537,7.6642793',
+       'dest_coor' => '45.075597,7.64406',
+    )),
+    1 => 0,
+    2 => 
+    stdClass::__set_state(array(
+       'distance' => 0.031431151312829246069480149117225664667785167694091796875,
+       'pick_up_coor' => '45.0669537,7.6642793',
+       'dest_coor' => '45.0463175,7.6405714',
+    )),
+  ),
+  2 => 
+  array (
+    0 => 
+    stdClass::__set_state(array(
+       'distance' => 0.0294865978066320387485088616585926502011716365814208984375,
+       'pick_up_coor' => '45.0463175,7.6405714',
+       'dest_coor' => '45.075597,7.64406',
+    )),
+    1 => 
+    stdClass::__set_state(array(
+       'distance' => 0.031431151312829246069480149117225664667785167694091796875,
+       'pick_up_coor' => '45.0463175,7.6405714',
+       'dest_coor' => '45.0669537,7.6642793',
+    )),
+    2 => 0,
+  ),
+)
+array (
+  0 => 0,
+  1 => 1,
+  2 => 2,
+)
+DISTANCE: 
+stdClass::__set_state(array(
+   'distance' => 
+  stdClass::__set_state(array(
+     'text' => '2.0 km',
+     'value' => 2011,
+  )),
+   'duration' => 
+  stdClass::__set_state(array(
+     'text' => '25 mins',
+     'value' => 1512,
+  )),
+   'status' => 'OK',
+))
+DISTANCE: 
+stdClass::__set_state(array(
+   'distance' => 
+  stdClass::__set_state(array(
+     'text' => '3.5 km',
+     'value' => 3464,
+  )),
+   'duration' => 
+  stdClass::__set_state(array(
+     'text' => '43 mins',
+     'value' => 2575,
+  )),
+   'status' => 'OK',
+))
