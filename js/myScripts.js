@@ -105,7 +105,7 @@ $(document).ready(function(){
 								req2.onreadystatechange=function(){
 									if(req2.readyState==4 && (req2.status==200 || req2.status==0)){
 										progressbar.progressbar("destroy");
-										//alert(req2.responseText);
+										alert(req2.responseText);
 										var obj = jQuery.parseJSON(req2.responseText);
 										
 										if (obj.successful == true) {
