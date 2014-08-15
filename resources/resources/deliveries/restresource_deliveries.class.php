@@ -137,6 +137,7 @@ class RestResource_Deliveries extends RestResource {
 						}
 						else {
 							$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
+							$this->_restGeneric->RestResponse->Content = "Wrong code";
 							return true;
 						}
 					}
@@ -146,6 +147,7 @@ class RestResource_Deliveries extends RestResource {
 						}
 						else {
 							$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
+							$this->_restGeneric->RestResponse->Content = "Wrong code";
 							return true;
 						}
 					}

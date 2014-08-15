@@ -69,6 +69,7 @@ $(document).ready(function(){
 		}
 		req.onreadystatechange=function(){
 			if(req.readyState==4 && (req.status==200 || req.status==0)){
+				alert(req.responseText);
 				var obj = jQuery.parseJSON(req.responseText);
 				if (obj.successful == true) {
 					$('#dialog').html("").append("The delivery price is: " + (obj.distance/1000) + " euros.</b>" +

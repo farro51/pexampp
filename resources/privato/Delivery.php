@@ -25,8 +25,11 @@
 			$this->recipient_info = $recipient_inf;
 			$this->recipient_email = $recipient_email;
 			$this->state = "waiting";
-			$this->tracking_code = md5($this->sender_email . time() . $this->sender_address . rand());
-			$this->delivery_code = md5($this->recipient_email . time() . $this->recipient_address . rand());
+			$time = (string)time();
+			$this->tracking_code = $time{rand(0, strlen($time) - 1)} . $recipient_email{rand(0, strlen($recipient_email) - 1)} . $time{rand(0, strlen($time) - 1)} . 
+									$sender_email{rand(0, strlen($sender_email) - 1)} . $time{rand(0, strlen($time) - 1)};
+			$this->delivery_code = $time{rand(0, strlen($time) - 1)} . $sender_email{rand(0, strlen($sender_email) - 1)} . $time{rand(0, strlen($time) - 1)} . 
+									$recipient_email{rand(0, strlen($recipient_email) - 1)} . $time{rand(0, strlen($time) - 1)};
 		}
 		
 		/*public function generateTrackingCode() {

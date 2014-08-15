@@ -113,13 +113,12 @@ class RestResource_Agents extends RestResource {
 						break;
 					}
 					$data = json_decode($parameters['path'], false);
-					echo $parameters['path'];
 					if($data == NULL) {
 						$agents->error = "Bad json";
 						break;
 					}
 					$result = $this->_queryDriver->updatePathAgent($data, $parameters['agent']);
-					if($result == true) {
+					if($result === true) {
 						$agents->successful = true;
 					}
 					else {
