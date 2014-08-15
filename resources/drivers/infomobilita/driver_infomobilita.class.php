@@ -717,7 +717,7 @@ class Driver_infomobilita implements iACPersistenceOperations {
 	}
 	
 	public function getAgentDestinations($id) {
-		$sql = 'SELECT latitude, longitude, p_order, id_delivery, pick_up FROM ' . $this->_prefix . 'path_agent WHERE id_agent=' . 
+		$sql = 'SELECT latitude, longitude, p_order, id_delivery, pick_up, arrival_time_est FROM ' . $this->_prefix . 'path_agent WHERE id_agent=' . 
 				$this->_connection->quote($id, 'integer') . ' ORDER BY p_order';
 		return $this->_connection->getList($sql);
 	}
@@ -869,40 +869,60 @@ class Driver_infomobilita implements iACPersistenceOperations {
 	}
 	
 	public function updatePathAgent($path, $id_agent) {
-		$sql = 'SELECT * FROM ' . $this->_prefix . 'path_agent WHERE id_agent=' . $this->_connection->quote($id_agent, 'integer') . 
-				' ORDER BY p_order ASC';
-		$results = $this->_connection->getList($sql);
-		if($results) {
-			if(checkPathAgent($path, $results)) {
-				$equal = true;
-				for($i = 0; $i < count($path); $i++) {
-					if(($path[$i]->id_delivery == $results[$i]->id_delivery) && ($path[$i]->type == $results[$i]->pick_up) && $equal) {
-						continue;
-					}
-					$equal = false;
-					//$this->getDistance();
-					$where = array('id_delivery'=>$path[$i]->id_delivery, 'pick_up'=>$path[$i]->type);
-					$fields = array('recip_sign'=>$info['sign']);
-					//if ($this->_connection->update_record($this->_prefix.'delivery', $fields, $where)) {}
-				}
-			}
+		$locations[] = $this->getAgentPosition($id_agent);
+		if(!$locations[0]) {
+			return "Can't find agent actual position";
 		}
-		return false;
+		$destinations = $this->getAgentDestinations($id_agent);
+		$sinc_path = $this->checkPathAgent($path, $destinations);
+		if(is_array($sinc_path)) {
+			$equal = true;
+			$time = 0;
+			$locations = array_merge($locations, $sinc_path);
+			var_dump($locations);
+			for($i = 0; $i < count($path); $i++) {
+				if(($path[$i]->id_delivery == $destinations[$i]->id_delivery) && ($path[$i]->type == $destinations[$i]->pick_up) && $equal) {
+					continue;
+				}
+				if($equal && $i > 0) {
+					$time = $destinations[$i-1]->arrival_time_est;
+				}
+				$equal = false;
+				$dist = $this->getDistance($locations[$i]->latitude . ',' . $locations[$i]->longitude,
+									$locations[$i + 1]->latitude . ',' . $locations[$i + 1]->longitude);
+				$time += $dist->duration->value / 2;
+				$where = array('id_delivery'=>$path[$i]->id_delivery, 'pick_up'=>$path[$i]->type);
+				$fields = array('arrival_time_est'=>$time, 'p_order'=>($i + 1));
+				if (!$this->_connection->update_record($this->_prefix . 'path_agent', $fields, $where)) {
+					return "Database error";
+				}
+				/*$dist->distance = $element->distance->value;
+				$dist->time_est = $element->duration->value / 2;*/
+				//if ($this->_connection->update_record($this->_prefix.'delivery', $fields, $where)) {}
+			}
+			return true;
+		}
+		return $sinc_path;
 	}
 	
 	public function checkPathAgent($path, $actual_path) {
 		if(count($path) != count($actual_path)) {
-			return false;
+			return "The new path has a different number of destinations that the actual path";
 		}
-		for($i = 0; $i < count($path) - 1; $i++) {
-			if (isInActualPath($actual_path, $path[$i])) {
-				return false;
-			}
+		$sinc_path = array();
+		if($path[count($path)-1]->type == 1) {
+			return "Wrong path, the last destination can't be a pick_up";
+		}
+		$sinc_path = $this->isInActualPath($actual_path, $path);
+		if (!$sinc_path) {
+			return "A destination from the new path there is not in the actual path";
+		}
+		for($i = 0; $i < count($path); $i++) {
 			$found = false;
 			for($j = $i + 1; $j < count($path); $j++) {
 				if($path[$i]->type == 0) {
 					if($path[$j]->id_delivery == $path[$i]->id_delivery) {
-						return false;
+						return "There is another destination for the delivery " . $path[$j]->id_delivery . " after the delivery";
 					}
 					$found = true;
 				}
@@ -912,24 +932,36 @@ class Driver_infomobilita implements iACPersistenceOperations {
 							$found = true;
 						}
 						else {
-							return false;
+							return "There is another destination for the delivery " . $path[$j]->id_delivery . " after the delivery";
 						}
 					}
 				}
 			}
-			if(!$found) {
-				return false;
+			if(!$found && ($i < count($path) - 1)){
+				return "The package was not delivered";
 			}
 		}
-		return true;
+		return $sinc_path;
 	}
 	
-	public function isInActualPath($actual_path, $dest) {
-		foreach($actual_path as $destin) {
-			if(($destin->id_delivery == $dest->id_delivery) && ($destin->pick_up == $dest->type)){
-				return true;
+	public function isInActualPath($actual_path, $new_path) {
+		$found = false;
+		$sinc_path = array();
+		for($i = 0; $i < count($new_path); $i++) {
+			for($j = 0; $j < count($actual_path); $j++) {
+				if(($actual_path[$j]->id_delivery == $new_path[$i]->id_delivery) && ($actual_path[$j]->pick_up == $new_path[$i]->type)){
+					$sinc_path[$i] = $new_path[$i];
+					$actual_path[$j]->id_delivery = 0;
+					$actual_path[$j]->pick_up = -1;
+					$found = true;
+					break;
+				}
 			}
+			if (!$found) {
+				return $found;
+			}
+			$found = false;
 		}
-		return false;
+		return $sinc_path;
 	}
 }

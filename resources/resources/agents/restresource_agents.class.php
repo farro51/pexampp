@@ -107,7 +107,24 @@ class RestResource_Agents extends RestResource {
                     }
                     break;
 				case 'updatePath':
-					
+					$agents = new stdClass();
+					if(empty($parameters['path'])) {
+						$agents->error = "Wrong arguments";
+						break;
+					}
+					$data = json_decode($parameters['path'], false);
+					echo $parameters['path'];
+					if($data == NULL) {
+						$agents->error = "Bad json";
+						break;
+					}
+					$result = $this->_queryDriver->updatePathAgent($data, $parameters['agent']);
+					if($result == true) {
+						$agents->successful = true;
+					}
+					else {
+						$agents->error = $result;
+					}
 				break;
             }
             
