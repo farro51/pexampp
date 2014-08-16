@@ -36,47 +36,7 @@ class RestResource_Deliveries extends RestResource {
     }
     
     /**
-     * When request verb is get
-     * @see resources/RestResource::onGet()
-     * @return bool
-     */
-    public function onGet(){
-
-        $resources = $this->_restGeneric->RestReceive->getResources();
-
-        if ($resources->isSpecificResources()){
-            return false;
-        }
-        else {
-            $parameters = $this->_restGeneric->RestReceive->getParameters();
-            
-            if(!empty($parameters['action']) && $parameters['action'] == 'search'){
-                if(empty($parameters['x']) || empty($parameters['y']) || empty($parameters['limit'])){
-                    $this->_restGeneric->RestResponse->Content = RestosLang::get('segments.get.coordinatesrequired');
-                    return true;
-                }
-                $segment = $this->_queryDriver->searchSegments($parameters['x'], $parameters['y'], $parameters['limit']);
-            }
-            else{
-                $segment = $this->_queryDriver->getSegments();
-            }
-        }
-        
-        if(!$segment) {
-            $this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
-        }
-        else {
-            Restos::using('resources.segments.restmapping_segments');
-            $mapping = new RestMapping_Segments($segment);
-
-            $this->_restGeneric->RestResponse->Content = $mapping->getMapping($this->_restGeneric->RestResponse->Type);
-        }
-
-        return true;
-    }
-    
-    /**
-     * When request verb is put
+     * When request verb is post
      * @see resources/RestResource::onPut()
      * @return bool
      */
@@ -137,6 +97,7 @@ class RestResource_Deliveries extends RestResource {
 						}
 						else {
 							$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
+							$this->_restGeneric->RestResponse->Type = 'Text';
 							$this->_restGeneric->RestResponse->Content = "Wrong code";
 							return true;
 						}
@@ -147,15 +108,36 @@ class RestResource_Deliveries extends RestResource {
 						}
 						else {
 							$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
+							$this->_restGeneric->RestResponse->Type = 'Text';
 							$this->_restGeneric->RestResponse->Content = "Wrong code";
 							return true;
 						}
 					}
                 break;
 				case 'feedback':
-					$result->successful = true;
-					$data = json_decode(file_get_contents('php://input'), true);
-					var_dump($data);
+					if(empty($parameters['data'])) {
+						$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
+						$this->_restGeneric->RestResponse->Type = 'Text';
+						$this->_restGeneric->RestResponse->Content = "Send all data";
+						return true;
+					}
+					$data = json_decode($parameters['data'], false);
+					if($data == NULL) {
+						$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
+						$this->_restGeneric->RestResponse->Type = 'Text';
+						$this->_restGeneric->RestResponse->Content = "Bad json format";
+						return true;
+					}
+					$result = $this->_queryDriver->saveFeedback($data);
+					if($result === true) {
+						$agents->successful = true;
+					}
+					else {
+						$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
+						$this->_restGeneric->RestResponse->Type = 'Text';
+						$this->_restGeneric->RestResponse->Content = $result;
+						return true;
+					}
 				break;
 			}
         }
@@ -167,6 +149,7 @@ class RestResource_Deliveries extends RestResource {
 			if(!$address_sender) {
 				$result->successful = false;
 				$result->message = "Sender address not found";
+				$this->_restGeneric->RestResponse->Content = $result;
 				return true;
 			}
 		
@@ -175,6 +158,7 @@ class RestResource_Deliveries extends RestResource {
 			if(!$address_recipient) {
 				$result->successful = false;
 				$result->message = "Recipient address not found";
+				$this->_restGeneric->RestResponse->Content = $result;
 				return true;
 			}
 		
@@ -196,14 +180,16 @@ class RestResource_Deliveries extends RestResource {
 			 * Agent2 45.051499, 7.674659 (4 min) 45.057168, 7.676805 (4.5 min) 45.062686, 7.678993 (2.5 min) 45.064383, 7.673672 (3 min) 45.067960, 7.676547
 			 */
 			file_put_contents('./log.txt', var_export($delivery->agent, true) . PHP_EOL, FILE_APPEND);
-			if(!$delivery->agent) {
+			if($delivery->agent === false) {
+			
 				$result->successful = false;
 				$result->message = "There aren't avaliable agents";
+				$this->_restGeneric->RestResponse->Content = $result;
 				return true;
 			}
 			
 			//We found the agent
-			
+			file_put_contents('./log.txt', "We found the agent" . PHP_EOL, FILE_APPEND);
 			$destinations = $this->_queryDriver->getAgentListPositions($delivery->agent, $lat_s, $lon_s, $lat_r, $lon_r);
 			if(!$destinations) {
 				$result->successful = false;
@@ -266,7 +252,7 @@ class RestResource_Deliveries extends RestResource {
         return true;
     }
     
-    public function onPut(){
+    /*public function onPut(){
 
         $resources = $this->_restGeneric->RestReceive->getResources();
     	$parameters = $this->_restGeneric->RestReceive->getProcessedContent();        
@@ -294,5 +280,5 @@ class RestResource_Deliveries extends RestResource {
         $this->_restGeneric->RestResponse->Content = $result;
 
         return true;
-    }
+    }*/
 }

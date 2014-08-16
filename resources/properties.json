@@ -1,7 +1,7 @@
 {
     "UriBase" : "http://localhost/ponyexpress/resources/",
     "NamespaceUriBase" : "specifications/",
-    "Resources": ["users", "alerts", "deliveries", "agents"],
+    "Resources": ["deliveries", "agents"],
     "ResourcesConfiguration" : {
         "ACDefault" : {
             "DriverConnector" : "ac_persistence"
@@ -15,7 +15,7 @@
     },
     "Connectors" : {
         "ac_persistence" : {
-            "Name" : "infomobilita",
+            "Name" : "ponyexpress",
             "Properties" : {
                 "ConnectionString" : {
                     "server" : "localhost",

@@ -10,6 +10,4 @@ deny from all
 
 RewriteEngine on
 RewriteCond %{REQUEST_URI} !(.*)index.php(.*)
-#RewriteRule ^(.*)$ http://localhost/r/index.php/$1 [PT]
-#RewriteRule ^(.*)$ http://cclix11.polito.it/~s182539/34aac7/resources/index.php/$1 [PT]
 RewriteRule ^(.*)$ http://localhost/ponyexpress/resources/index.php/$1 [PT]

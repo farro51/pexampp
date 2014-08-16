@@ -17,17 +17,16 @@
  *  along with Restos.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-Restos::using('drivers.iacpersistenceoperations');
 Restos::using('drivers.phpmailer');
 Restos::using('privato.GoogleApi');
 
 /**
  * Class Driver_acsql
  *
- * @author Cristina Madrigal <malevilema@gmail.com>
+ * @author Federico Arroyave <farroyave51@gmail.com>
  * @version 0.1
  */
-class Driver_infomobilita implements iACPersistenceOperations {
+class Driver_ponyexpress {
     
     /**
      * 
@@ -79,345 +78,14 @@ class Driver_infomobilita implements iACPersistenceOperations {
         
         $this->_connection = $connector;
     }
-
-
+  
     /**
      * 
-     * Return a user entity
-     * @param $resource_key User identifier
-     * @return object User
-     */
-    public function getUser($resource_key){
-
-        $prototype = null;
-
-        $sql = 'SELECT * FROM ' . $this->_prefix . 'user WHERE email = ' . $this->_connection->quote($resource_key, 'varchar');
-
-        $row = $this->_connection->getRow($sql);
-        
-        
-        
-        if (is_object($row)) {
-            
-            $prototype = array();
-            $prototype['id']        = $resource_key;
-            $prototype['username']  = $row->email;
-            $prototype['password']  = $row->password;
-        }
-        
-        return $prototype;
-    }
-    
-    /**
-     * 
-     * Return a alert entity
-     * @param $resource_key alert identifier
-     * @return object alert
-     */
-    public function getAlert($resource_key){
-
-        $prototype = null;
-
-        $sql = 'SELECT * FROM ' . $this->_prefix . 'alert WHERE id = ' . $this->_connection->quote($resource_key, 'integer');
-
-        $row = $this->_connection->getRow($sql);
-        
-        if (is_object($row)) {
-            
-            $prototype = array();
-            $prototype['id']                = $resource_key;
-            $prototype['x']                 = $row->x;
-            $prototype['y']                 = $row->y;
-            $prototype['description']       = $row->description;
-        }
-        
-        return $prototype;
-    }
-    
-    /**
-     * 
-     * Return an array of alert entity
-     * @param $username user identifier
-     * @return array alert
-     */
-    public function getAlerts(){
-        
-        if(empty($_SESSION['imi.users'])){
-            return null;
-        }
-        
-        $prototype = null;
-        
-        if($_SESSION['imi.users']->rol == 'user'){
-            $sql = 'SELECT * FROM ' . $this->_prefix . 'alert where userid = ' . $this->_connection->quote($_SESSION['imi.users']->id, 'integer');
-        }
-        else{
-            $sql = 'SELECT * FROM ' . $this->_prefix . 'alert ';
-        }
-
-        $alerts = $this->_connection->getList($sql);
-        $restalerts = array();
-        
-        foreach ($alerts as $alert) {
-            $prototype = array();
-            $prototype['id']                = $alert->id;
-            $prototype['x']                 = $alert->x;
-            $prototype['y']                 = $alert->y;
-            $prototype['description']       = $alert->description;
-            
-            $restalerts[] = $prototype;
-        }
-        
-        return $restalerts;
-    }
-    
-    /**
-     * 
-     * Return an array of alert entity
-     * @return array alert
-     */
-    public function searchAlerts($x, $y, $limit){
-        $prototype = null;
-        $x = $this->_connection->quote($x, 'integer');
-        $y = $this->_connection->quote($y, 'integer');
-        $limit = $this->_connection->quote($limit, 'integer');
-        $sql = "SELECT * FROM {$this->_prefix}alert WHERE POW((POW((x - $x),2) + POW((y - $y),2)),0.5) <= $limit";
-        $alerts = $this->_connection->getList($sql);
-        $restalerts = array();
-        
-        foreach ($alerts as $alert) {
-            $prototype = array();
-            $prototype['id']                = $alert->id;
-            $prototype['x']                 = $alert->x;
-            $prototype['y']                 = $alert->y;
-            $prototype['description']       = $alert->description;
-            
-            $restalerts[] = $prototype;
-        }
-        
-        return $restalerts;
-    }
-    
-    /**
-     * 
-     * Return an array of segment entity
-     * @return array segment
-     */
-    public function searchSegments($x, $y, $limit){
-        $prototype = null;
-        $x = $this->_connection->quote($x, 'integer');
-        $y = $this->_connection->quote($y, 'integer');
-        $limit = $this->_connection->quote($limit, 'integer');
-        $sql = "SELECT * FROM {$this->_prefix}segment WHERE POW((POW((x1 - $x),2) + POW((y1 - $y),2)),0.5) <= $limit OR POW((POW((x2 - $x),2) + POW((y2 - $y),2)),0.5) <= $limit";
-        $alerts = $this->_connection->getList($sql);
-        $restalerts = array();
-        
-        foreach ($alerts as $segment) {
-            $prototype = array();
-            $prototype['id']                = $segment->id;
-            $prototype['nome']                = $segment->nome;
-            $prototype['x1']                 = $segment->x1;
-            $prototype['y1']                 = $segment->y1;
-            $prototype['x2']                 = $segment->x2;
-            $prototype['y2']                 = $segment->y2;
-            $prototype['intensity']       = $segment->intensity;
-            
-            $restalerts[] = $prototype;
-        }
-        
-        return $restalerts;
-    }
-    
-    /**
-     * 
-     * Return an array of project entity
-     * @return array project
-     */
-	 public function getProjects(){
-    
-        if(empty($_SESSION['imi.users'])){
-            return null;
-        }
-        
-        $prototype = null;
-        
-        if($_SESSION['imi.users']->rol == 'admin' || $_SESSION['imi.users']->rol == 'participant' || $_SESSION['imi.users']->rol == 'guest'){
-            $sql = 'SELECT a.id, title, description, state, b.name, b.lastname, a.participant1, a.participant2, a.participant3  FROM ' . $this->_prefix . 'project a, user b WHERE a.coordinator=b.id ';
-        }
-		else if($_SESSION['imi.users']->rol == 'coordinator'){
-
-            $sql = 'SELECT a.id, title, description, state, b.name, b.lastname, a.participant1, a.participant2, a.participant3  FROM ' . $this->_prefix . 'project a, user b WHERE a.coordinator=b.id AND b.id= ' . $this->_connection->quote($_SESSION['imi.users']->id, 'integer');
-        }
-        else{
-            return false;
-        }
-
-        $projects = $this->_connection->getList($sql);
-		
-		$restprojects = array();
-        
-        foreach ($projects as $project) {
-			
-			$prototype = array();
-            $prototype['id']                = $project->id;
-            $prototype['title']             = $project->title;
-            $prototype['coordinator']       = $project->name.' '.$project->lastname;
-            $prototype['state']             = $project->state;
-            $prototype['description']       = $project->description;
-			
-			if(!empty($project->participant1)){
-				$sql = 'SELECT name, lastname FROM '.$this->_prefix.'user WHERE id= '.$project->participant1;
-				$participant = $this->_connection->getRow($sql);
-				if($participant){
-					$prototype['participant1'] = $participant->name.' '.$participant->lastname;
-				}
-			}
-			else{
-				$prototype['participant1'] = 'unallocated';
-			}
-			
-			if(!empty($project->participant2)){
-				$sql = 'SELECT name, lastname FROM '.$this->_prefix.'user WHERE id= '.$project->participant2;
-				$participant = $this->_connection->getRow($sql);
-				if($participant){
-					$prototype['participant2'] = $participant->name.' '.$participant->lastname;
-				}
-			}
-			else{
-				$prototype['participant2'] = 'unallocated';
-			}
-			
-			if(!empty($project->participant3)){
-				$sql = 'SELECT name, lastname FROM '.$this->_prefix.'user WHERE id= '.$project->participant3;
-				$participant = $this->_connection->getRow($sql);
-				if($participant){
-					$prototype['participant3'] = $participant->name.' '.$participant->lastname;
-				}
-			}
-			else{
-				$prototype['participant3'] = 'unallocated';
-			}
-            
-            $restsegments[] = $prototype;
-        }
-        
-        return $restsegments;
-    }
-	 
-    public function getSegments(){
-    
-        if(empty($_SESSION['imi.users'])){
-            return null;
-        }
-        
-        $prototype = null;
-        
-        if($_SESSION['imi.users']->rol == 'admin'){
-            $sql = 'SELECT * FROM ' . $this->_prefix . 'segment ';
-        }
-        else{
-            return false;
-        }
-
-        $segments = $this->_connection->getList($sql);
-        $restsegments = array();
-        
-        foreach ($segments as $segment) {
-            $prototype = array();
-            $prototype['id']                = $segment->id;
-            $prototype['x1']                = $segment->x1;
-            $prototype['y1']                = $segment->y1;
-            $prototype['x2']                = $segment->x2;
-            $prototype['y2']                = $segment->y2;
-            $prototype['intensity']         = $segment->intensity;
-            $prototype['nome']              = $segment->nome;
-            
-            $restsegments[] = $prototype;
-        }
-        
-        return $restsegments;
-    }
-    
-    /**
-     * 
-     * Insert an project
-     * @return mixed project identifier if alert is inserted; false otherwise
-     */
-    public function insertProject($title, $description){
-        $result = false;
-        if(!empty($_SESSION['imi.users']) && property_exists($_SESSION['imi.users'],'rol')){
-            if($_SESSION['imi.users']->rol == 'coordinator'){
-                $fields = array('title'=>$title, 'description'=>$description, 'coordinator'=>$_SESSION['imi.users']->id, 'participant1'=>null, 'participant2'=>null,'participant3'=>null, 'state'=>'open');
-                $result = $this->_connection->insert_record($this->_prefix.'project',$fields, true);
-            }
-        }
-        return $result;
-    }
-    
-    /**
-     * 
-     * Insert an user
-     * @return mixed user identifier if user is inserted; false otherwise
-     */
-    public function insertUser($name, $lastname, $email, $password, $role){
-        $result = false;
-        
-        $name = $this->_connection->quote($name, 'varchar');
-        $lastname = $this->_connection->quote($lastname, 'varchar');
-        $email = $this->_connection->quote($email, 'varchar');
-        //$password = MD5($password);
-        
-        $fields = array('name'=>$name, 'lastname'=>$lastname, 'email'=>$email, 'password'=>$password, 'role'=>$role);
-        $result = $this->_connection->insert_record($this->_prefix.'user',$fields, true);
-        return $result;
-    }
-    
-    /**
-     * 
-     * Delete an alert
-     * @param $resource_key alert identifier
-     * @return bool true if alert is deleted; false otherwise
-     */
-    public function deleteAlert($resource_key){
-        $result = false;
-        $where = array('id'=>$resource_key);
-        if(!empty($_SESSION['imi.users']) && property_exists($_SESSION['imi.users'],'rol')){
-            if($_SESSION['imi.users']->rol != 'admin'){
-                $where['userid'] = $_SESSION['imi.users']->id;
-            }
-            $result = $this->_connection->delete_record($this->_prefix.'alert',$where);
-        }
-        
-        return $result;
-    }
-    
-    /**
-     * 
-     * Delete an alert
-     * @param $resource_key alert identifier
-     * @return bool true if alert is deleted; false otherwise
-     */
-    public function updateSegment($resource_key, $intensity){
-        $result = false;
-        
-        if(!empty($_SESSION['imi.users']) && property_exists($_SESSION['imi.users'],'rol')){
-            if($_SESSION['imi.users']->rol == 'admin'){
-                $intensity = $this->_connection->quote($intensity, 'integer');
-                $fields = array('intensity'=>$intensity);
-                $where = array('id'=>$resource_key);
-                $result = $this->_connection->update_record($this->_prefix.'segment', $fields, $where);
-            }
-        }
-        
-        return $result;
-    }
-    
-    /**
-     * 
-     * Return an user entity object
+     * Login
      * @param $username user identifier
      * @param $password password user
-     * @return object
+	 * @param &$id agent id
+     * @return boolean true if can be logged
      */
     public function login($username, $password, &$id){
 		$sql = 'SELECT id FROM ' . $this->_prefix . 'agent WHERE mail=' . $this->_connection->quote($username, 'varchar') 
@@ -434,10 +102,9 @@ class Driver_infomobilita implements iACPersistenceOperations {
     
     /**
      * 
-     * Return an user entity object
+     * Logout
      * @param $username user identifier
-     * @param $password password user
-     * @return object
+     * @return boolean true if success
      */
     public function logout($username){
         $fields = array('status'=>'unlogged');
@@ -451,14 +118,7 @@ class Driver_infomobilita implements iACPersistenceOperations {
 		$results = $this->_connection->getList($sql);
 		return $results;
     }
-    
-    /**
-     * 
-     * Return an user entity object
-     * @param $username user identifier
-     * @param $password password user
-     * @return object
-     */
+
     public function updateAgent($fields, $id){
 		$where = array('id'=>$this->_connection->quote($id, 'varchar'));
         if ($this->_connection->update_record($this->_prefix.'agent', $fields, $where)) {
@@ -770,36 +430,33 @@ class Driver_infomobilita implements iACPersistenceOperations {
 	
 	public function insertPathAgent($destinations, $dist_matrix, $order_path, $agent_id) {
 		$arr_est = 0;
-		$fields = array('p_order'=>0, 'arrival_time_est'=>0);
+		/*$fields = array('p_order'=>0, 'arrival_time_est'=>0);
 		$where = array('id_agent'=>$agent_id);
-		$this->_connection->DB->query("DELETE FROM " . $this->_prefix.'path_agent' . " WHERE id_agent=" . $agent_id);
+		$this->_connection->DB->query("DELETE FROM " . $this->_prefix.'path_agent' . " WHERE id_agent=" . $agent_id);*/
 		for($i = 1; $i < count($destinations); $i++) {
 			$distance = $this->getDistance($dist_matrix[$order_path[$i-1]][$order_path[$i]]->pick_up_coor, $dist_matrix[$order_path[$i-1]][$order_path[$i]]->dest_coor);
-			file_put_contents('./log.txt', "DISTANCE: " .  PHP_EOL . var_export($distance, true) . PHP_EOL, FILE_APPEND);
+			if(!$distance) {
+				return false;
+			}
+			file_put_contents('./log.txt', "DISTANCE: " . $dist_matrix[$order_path[$i-1]][$order_path[$i]]->pick_up_coor . " " .
+								$dist_matrix[$order_path[$i-1]][$order_path[$i]]->dest_coor . PHP_EOL . var_export($distance, true) . PHP_EOL, FILE_APPEND);
 			$arr_est += $distance->duration->value;
-			$fields = array('id_agent'=>$agent_id, 'p_order'=>$i, 'id_delivery'=>$destinations[$order_path[$i]]->id_delivery, 
-					'pick_up'=>$destinations[$order_path[$i]]->pick_up, 'latitude'=>$destinations[$order_path[$i]]->latitude, 
-					'longitude'=>$destinations[$order_path[$i]]->longitude, 'arrival_time_est'=>$arr_est);
-    		if(!$this->_connection->insert_record($this->_prefix.'path_agent',$fields)) {
-    			return false;
-    		}
-			/*if ($order_path[$i] < (count($destinations) - 2)) {
-				$fields['p_order'] = $i;
-				$fields['arrival_time_est'] = $arr_est;
-				$where['id_delivery'] = $destinations[$order_path[$i]]->id_delivery;
-				$where['pick_up'] = $destinations[$order_path[$i]]->pick_up;
+			
+			if ($order_path[$i] < (count($destinations) - 2)) {
+				$fields = array('p_order'=>$i, 'arrival_time_est'=>$arr_est);
+				$where = array('id_delivery'=>$destinations[$order_path[$i]]->id_delivery, 'pick_up'=>$destinations[$order_path[$i]]->pick_up);
 		        if (!$this->_connection->update_record($this->_prefix.'path_agent', $fields, $where)) {
 					return false;
 				}
 			}
 			else {
 				$fields = array('id_agent'=>$agent_id, 'p_order'=>$i, 'id_delivery'=>$destinations[$order_path[$i]]->id_delivery, 
-						'pick_up'=>$destinations[$order_path[$i]]->pick_up, 'latitude'=>$destinations[$order_path[$i]]->latitude, 
-						'longitude'=>$destinations[$order_path[$i]]->longitude, 'arrival_time_est'=>$arr_est);
-        		if(!$this->_connection->insert_record($this->_prefix.'path_agent',$fields)) {
-        			return false;
-        		}
-			}*/
+					'pick_up'=>$destinations[$order_path[$i]]->pick_up, 'latitude'=>$destinations[$order_path[$i]]->latitude, 
+					'longitude'=>$destinations[$order_path[$i]]->longitude, 'arrival_time_est'=>$arr_est);
+				if(!$this->_connection->insert_record($this->_prefix.'path_agent',$fields)) {
+					return false;
+				}
+			}
 		}
 		return true;
 	}
@@ -853,19 +510,23 @@ class Driver_infomobilita implements iACPersistenceOperations {
 		return -1;
 	}
 	
-	public function saveFeedback($id_delivery, $info) {
-		$where = array('id'=>$id_delivery);
-		$fields = array('recip_sign'=>$info['sign']);
+	public function saveFeedback($info) {
+		$where = array('id'=>$info->id_delivery);
+		$fields = array('recip_sign'=>$info->sign);
         if ($this->_connection->update_record($this->_prefix.'delivery', $fields, $where)) {
 			if ($this->_connection->get_affected_rows() > 0) {
-				foreach($info['questions'] as $quest) {
-					$fields = array('questionnaire_id'=>$id_delivery, 'vote'=>$quest['vote'], 'question_id'=>$quest['question_id']);
-					if(!$this->_connection->insert_record($this->_prefix.'path_agent',$fields)) {
-						return false;
+				foreach($info->questions as $quest) {
+					$fields = array('questionnaire_id'=>$info->id_delivery, 'vote'=>$quest->vote, 'question_id'=>$quest->question_id);
+					if(!$this->_connection->insert_record($this->_prefix.'question_response',$fields)) {
+						return "Database error. Insert question";
 					}
 				}
 			}
+			else {
+				return "Database error. On update sign";
+			}
 		}
+		return true;
 	}
 	
 	public function updatePathAgent($path, $id_agent) {

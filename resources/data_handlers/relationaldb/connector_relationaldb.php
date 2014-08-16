@@ -19,7 +19,7 @@
 /**
  * Class Connector_relationaldb
  *
- * @author Cristina Madrigal <malevilema@gmail.com>
+ * @author Federico Arroyave <farroyave51@gmail.com>
  * @version 0.1
  */
 class Connector_relationaldb {

@@ -19,7 +19,7 @@
 /**
  * Class to manage the actions resources mapping
  *
- * @author Cristina Madrigal <malevilema@gmail.com>
+ * @author Federico Arroyave <farroyave51@gmail.com>
  * @version 0.1
  */
 class RestMapping_Agents extends RestMapping {

@@ -69,13 +69,10 @@ $(document).ready(function(){
 		}
 		req.onreadystatechange=function(){
 			if(req.readyState==4 && (req.status==200 || req.status==0)){
-				alert(req.responseText);
 				var obj = jQuery.parseJSON(req.responseText);
 				if (obj.successful == true) {
-					$('#dialog').html("").append("The delivery price is: " + (obj.distance/1000) + " euros.</b>" +
+					$('#dialog').html("").append("The delivery price is: " + (obj.distance/1000) + " euros.</br>" +
 								"Do you want to proceed?");
-					/*$('#dialog').html("").append("The tracking code is: <b>" + obj.tracking_code +
-													"</b><br>Sended too to the email provided: " + email_s);*/
 					$('#dialog').dialog({
 					   title: "Successful transaction",
 					   height: 200,
@@ -149,6 +146,7 @@ $(document).ready(function(){
 													}
 											] );
 										}
+										alert("En false: " + req2.responseText);
 									}
 								}
 								req2.open("POST","resources/deliveries.json",true);

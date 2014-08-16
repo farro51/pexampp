@@ -17,9 +17,9 @@
  */
 
 /**
- * Class to manage the users resources
+ * Class to manage the agents resources
  *
- * @author Cristina Madrigal <malevilema@gmail.com>
+ * @author Federico Arroyave <farroyave51@gmail.com>
  * @version 0.1
  */
 class RestResource_Agents extends RestResource {
@@ -41,10 +41,6 @@ class RestResource_Agents extends RestResource {
 		$results->successful = true;
         if ($resources->isSpecificResources()){
         	$results->destinations_list = $this->_queryDriver->getAgentPath($resources->getResourceId());
-        	/*$destinations = $this->_queryDriver->getAgentListPositions($resources->getResourceId(), 45.062686, 7.678993, 45.064383, 7.673672);
-			$dist_matrix = $this->_queryDriver->getDistanceMatrix($destinations);
-        	$results->order_path = $this->_queryDriver->getAgentOrderPath($dist_matrix, $destinations);
-        	$results->destinations = $destinations;*/
         	$this->_restGeneric->RestResponse->Content = $results;
         	return true;
         }
@@ -70,30 +66,21 @@ class RestResource_Agents extends RestResource {
 					$agents = new stdClass();
 					$agents->successful = true;
 					if(empty($parameters['email']) || empty($parameters['password'])){
-						$agents->authorization = false;
+						$agents = false;
+						$message = "Insert all data";
                     }
 					else {
 						$id_agent = null;
 						$agents->authorization = $this->_queryDriver->login($parameters['email'], 
 									$parameters['password'], $id_agent);
+						if(!$agents->authorization) {
+							$message = "User or password incorrect!";
+							$agents = false;
+							break;
+						}
 						$agents->id_user = $id_agent;
 						$agents->questions = $this->_queryDriver->getQuestions();
 					}
-                    /*if(empty($parameters['username']) || empty($parameters['password'])){
-                        //$this->_restGeneric->RestResponse->Content = RestosLang::get('actions.post.usernameandpasswordrequired');
-                        return true;
-                    }
-                    $user = $this->_queryDriver->login($parameters['username'], $parameters['password']);
-                    if(!$user){
-                        $this->_restGeneric->RestResponse->Content = RestosLang::get('actions.post.usernameorpasswordnovalid');
-                        return true;
-                    }
-                    else{
-                        $actions = new stdClass();
-                        $actions->successful = true;
-                        $actions->entity = $user;
-                        
-                    }*/
                     break;
                 case 'logout':
                     $response = $this->_queryDriver->logout($parameters['id_user']);
@@ -103,18 +90,21 @@ class RestResource_Agents extends RestResource {
                         $agents->successful = true;
                     }
                     else{
-                        $agents = RestosLang::get('actions.post.notlogout');
+                        $agents = false;
+						$message = "Logout fail!";
                     }
                     break;
 				case 'updatePath':
 					$agents = new stdClass();
 					if(empty($parameters['path'])) {
-						$agents->error = "Wrong arguments";
+						$message = "Wrong arguments";
+						$agents = false;
 						break;
 					}
 					$data = json_decode($parameters['path'], false);
 					if($data == NULL) {
-						$agents->error = "Bad json";
+						$message = "Bad json";
+						$agents = false;
 						break;
 					}
 					$result = $this->_queryDriver->updatePathAgent($data, $parameters['agent']);
@@ -122,7 +112,8 @@ class RestResource_Agents extends RestResource {
 						$agents->successful = true;
 					}
 					else {
-						$agents->error = $result;
+						$agents = false;
+						$message = $result;
 					}
 				break;
             }
@@ -134,6 +125,8 @@ class RestResource_Agents extends RestResource {
         
         if(!$agents) {//https://maps.googleapis.com/maps/api/distancematrix/json?origins=45.0757,7.64835|45.076,7.6556|45.0764,7.66432|45.0741,7.66839|45.0698,7.66462|45.0672,7.6662&destinations=45.0757,7.64835|45.076,7.6556|45.0764,7.66432|45.0741,7.66839|45.0698,7.66462|45.0672,7.6662&mode=walking&sensor=false
             $this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
+			$this->_restGeneric->RestResponse->Type = 'Text';
+			$this->_restGeneric->RestResponse->Content = $message;
         }
         else {
 		
@@ -175,11 +168,19 @@ class RestResource_Agents extends RestResource {
 			if (!empty($parameters['longitude'])) {
 				$fields['last_position_lon'] = $parameters['longitude'];
 			}
-			
+			$message = "There isn't data to update";
 			if (count($fields) > 0) {
 				$agents->successful = $this->_queryDriver->updateAgent($fields, $resources->getResourceId());
+				$message = "Can't update the agent";
 			}
-			$this->_restGeneric->RestResponse->Content = $agents;
+			if($agents->successful) {
+				$this->_restGeneric->RestResponse->Content = $agents;
+			}
+			else {
+				$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
+				$this->_restGeneric->RestResponse->Type = 'Text';
+				$this->_restGeneric->RestResponse->Content = $message;
+			}
         }
         else {
             return false;

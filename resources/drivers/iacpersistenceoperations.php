@@ -32,14 +32,14 @@ interface iACPersistenceOperations {
      * @param $gambler_id User identification
      * @return object User
      */
-    public function getAlert($user_id);
+    public function getDelivery($user_id);
     /**
      * 
      * Return a user as prototype
      * @param $gambler_id User identification
      * @return object User
      */
-    public function getUser($user_id);
+    public function getAgent($user_id);
     
     
 

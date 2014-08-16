@@ -18,30 +18,10 @@
  */
 
 /**
- * String list from Spanish lang 
+ * String list from English lang 
  *
- * @author Cristina Madrigal <malevilema@gmail.com>
+ * @author Federico Arroyave <malevilema@gmail.com>
  * @version 0.1
  */
 
-$s['actions.post.usernameandpasswordrequired'] = 'Username and Password are required';
-$s['actions.post.usernameorpasswordnovalid'] = 'Username or Password is not valid';
-$s['actions.post.notlogout'] = 'Server could not logout';
-$s['alerts.post.coordinatesrequired'] = 'The coordinates are required';
-$s['alerts.get.coordinatesrequired'] = 'The coordinates and limit are required';
-$s['segments.put.intensityrequired'] = 'The intensity value is required';
-$s['users.post.nameandlastnameandusernameandpasswordarerequired'] = 'The fields name, lastname, username and password are required';
-$s['segments.get.coordinatesrequired'] = 'The coordinates are required';
-$s['users.post.useralreadyexists'] = 'User already exists';
-$s['projects.get.titlerequired'] = 'Title is required';
 $s[''] = '';
-$s[''] = '';
-$s[''] = '';
-$s[''] = '';
-$s[''] = '';
-$s[''] = '';
-$s[''] = '';
-$s[''] = '';
-$s[''] = '';
-$s[''] = '';
-
