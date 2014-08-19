@@ -87,13 +87,13 @@ class Driver_ponyexpress {
 	 * @param &$id agent id
      * @return boolean true if can be logged
      */
-    public function login($username, $password, &$id){
+    public function login($username, $password, $gcm_id, &$id){
 		$sql = 'SELECT id FROM ' . $this->_prefix . 'agent WHERE mail=' . $this->_connection->quote($username, 'varchar') 
 				. ' AND password=' . $this->_connection->quote($password, 'varchar') . ' AND status=' . $this->_connection->quote('unlogged', 'varchar');
 		$agent = $this->_connection->getRow($sql);
 		if($agent){
 			$id = $agent->id;
-			$fields = array('status'=>'logged');
+			$fields = array('status'=>'logged', 'gmc_id'=>$gcm_id);
 			$where = array('id'=>$agent->id);
 			return $this->_connection->update_record($this->_prefix.'agent', $fields, $where);
 		}
@@ -129,7 +129,7 @@ class Driver_ponyexpress {
 		return false;
     }
     
-	public function sendMail($recipent_email, $title, $code) {
+	public function sendMail($recipent_email, $title, $body) {
 		$mail = new PHPMailer(); // create a new object
 		$mail->IsSMTP(); // enable SMTP
 		$mail->SMTPDebug = 1; // debugging: 1 = errors and messages, 2 = messages only
@@ -141,11 +141,11 @@ class Driver_ponyexpress {
 		$mail->Username = "ponyexpress052014@gmail.com";
 		$mail->Password = "12378945";
 		$mail->SetFrom("ponyexpress052014@gmail.com");
-		$mail->Subject = $title . " credentials";
-		$mail->Body = "Hi, this email is automatically send to you from ponyexpress.com because a new delivery was created. </br> The corrisponding $title code is: " . $code . "<br/><br/>";
+		$mail->Subject = $title;
+		$mail->Body = $body;
 		$mail->AddAddress($recipent_email);
 		if(!$mail->Send()){
-			echo "Mailer Error: " . $mail->ErrorInfo;
+			file_put_contents('./log.txt', "Mailer Error: " . $mail->ErrorInfo . PHP_EOL, FILE_APPEND);
 			return false;//"Mailer Error: " . $mail->ErrorInfo;
 		}
 		else{
@@ -540,7 +540,7 @@ class Driver_ponyexpress {
 			$equal = true;
 			$time = 0;
 			$locations = array_merge($locations, $sinc_path);
-			var_dump($locations);
+			$dest_emails = $this->getDestinationEmails($id_agent);
 			for($i = 0; $i < count($path); $i++) {
 				if(($path[$i]->id_delivery == $destinations[$i]->id_delivery) && ($path[$i]->type == $destinations[$i]->pick_up) && $equal) {
 					continue;
@@ -557,6 +557,24 @@ class Driver_ponyexpress {
 				if (!$this->_connection->update_record($this->_prefix . 'path_agent', $fields, $where)) {
 					return "Database error";
 				}
+				$rec_email = null;
+				foreach($dest_emails as $email) {
+					if($email->id == $path[$i]->id_delivery) {
+						$rec_email = $email->recipent_email;
+					}
+				}
+				if($rec_email != null) {
+					$title = 'Delivery expected time was changed';
+					$body = "Hi, this email is automatically send to you from ponyexpress.com because the delivery was updated.
+						</br> The new delivery expected time is: " . gmdate("Y-m-d H:i", (time() + $time + (30*60))) . "<br/><br/>";
+					if(!$this->sendMail($rec_email, $title, $body)) {
+						return "Error to send email to $rec_email";
+					}
+				}
+				else {
+					return "Problem to find recipient email";
+				}
+				
 				/*$dist->distance = $element->distance->value;
 				$dist->time_est = $element->duration->value / 2;*/
 				//if ($this->_connection->update_record($this->_prefix.'delivery', $fields, $where)) {}
@@ -624,5 +642,11 @@ class Driver_ponyexpress {
 			$found = false;
 		}
 		return $sinc_path;
+	}
+	
+	public function getDestinationEmails($id_agent) {
+		$sql = "SELECT id, recipient_email FROM " . $this->_prefix . "delivery WHERE agent_id=" . $id_agent .
+				" AND state!='delivered'";
+		return $this->_connection->getList($sql);
 	}
 }

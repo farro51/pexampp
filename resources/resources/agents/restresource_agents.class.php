@@ -65,14 +65,14 @@ class RestResource_Agents extends RestResource {
                 case 'login':
 					$agents = new stdClass();
 					$agents->successful = true;
-					if(empty($parameters['email']) || empty($parameters['password'])){
+					if(empty($parameters['email']) || empty($parameters['password']) || empty($parameters['reg_id'])){
 						$agents = false;
 						$message = "Insert all data";
                     }
 					else {
 						$id_agent = null;
 						$agents->authorization = $this->_queryDriver->login($parameters['email'], 
-									$parameters['password'], $id_agent);
+									$parameters['password'], $parameters['reg_id'], $id_agent);
 						if(!$agents->authorization) {
 							$message = "User or password incorrect!";
 							$agents = false;

@@ -130,6 +130,7 @@ class RestResource_Deliveries extends RestResource {
 					}
 					$result = $this->_queryDriver->saveFeedback($data);
 					if($result === true) {
+						$agents = new stdClass();
 						$agents->successful = true;
 					}
 					else {
@@ -238,9 +239,12 @@ class RestResource_Deliveries extends RestResource {
 				$this->_restGeneric->RestResponse->Content = $result;
 				return true;
 			}
-			
-			/*$this->_queryDriver->sendMail($delivery->sender_email, 'Tracking', $delivery->tracking_code);
-			$this->_queryDriver->sendMail($delivery->recipient_email, 'Delivery', $delivery->delivery_code);*/
+			/*$this->_queryDriver->sendMail($delivery->sender_email, 'Tracking credentials', 
+						"Hi, this email is automatically send to you from ponyexpress.com because a new delivery was created.
+						</br> The corrisponding Tracking code is: " . $delivery->tracking_code . "<br/><br/>");
+			$this->_queryDriver->sendMail($delivery->recipient_email, 'Delivery credentials', 
+						"Hi, this email is automatically send to you from ponyexpress.com because a new delivery was created.
+						</br> The corrisponding Delivery code is: " . $delivery->delivery_code . "<br/><br/>");*/
 			//@TODO we must send a push notification to the agent phone, and save the new path with the new delivery in the last position
 			
 			$result->successful = true;
