@@ -50,7 +50,7 @@ class Gcm {
  
         // Close connection
         curl_close($ch);
-        echo $result;
+        return $result;
     }
  
 }

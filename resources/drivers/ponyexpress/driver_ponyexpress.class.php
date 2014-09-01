@@ -87,13 +87,15 @@ class Driver_ponyexpress {
 	 * @param &$id agent id
      * @return boolean true if can be logged
      */
-    public function login($username, $password, $gcm_id, &$id){
-		$sql = 'SELECT id FROM ' . $this->_prefix . 'agent WHERE mail=' . $this->_connection->quote($username, 'varchar') 
+    public function login($username, $password, $gcm_id, &$id, &$name){
+		$sql = 'SELECT id, name FROM ' . $this->_prefix . 'agent WHERE mail=' . $this->_connection->quote($username, 'varchar') 
 				. ' AND password=' . $this->_connection->quote($password, 'varchar') . ' AND status=' . $this->_connection->quote('unlogged', 'varchar');
+		file_put_contents('./log.txt', $sql . PHP_EOL, FILE_APPEND);
 		$agent = $this->_connection->getRow($sql);
 		if($agent){
 			$id = $agent->id;
-			$fields = array('status'=>'logged', 'gmc_id'=>$gcm_id);
+			$name = $agent->name;
+			$fields = array('status'=>'logged', 'gcm_id'=>$gcm_id);
 			$where = array('id'=>$agent->id);
 			return $this->_connection->update_record($this->_prefix.'agent', $fields, $where);
 		}
@@ -179,11 +181,11 @@ class Driver_ponyexpress {
 	 */
 	public function searchAgent($lat_s, $lon_s, $lat_r, $lon_r) {
 		//Select the agents logged with their actual position
-		$sql = 'SELECT id as id_agent, last_position_lat as latitude, last_position_lon as longitude, ' .
+		$sql = 'SELECT id as id_agent, last_position_lat as latitude, last_position_lon as longitude, gcm_id' .
 				'0 as arrival_time_est, 0 as p_order from agent where status=' . $this->_connection->quote('logged', 'varchar');
 		
 		//Select the destinations for the agents logged
-		$sql2 = 'SELECT id_agent, longitude, latitude, arrival_time_est, p_order FROM ' . $this->_prefix . 
+		$sql2 = 'SELECT id_agent, longitude, latitude, arrival_time_est, p_order, 0 as gcm_id FROM ' . $this->_prefix . 
 				'agent, path_agent WHERE status=' . $this->_connection->quote('logged', 'varchar') . ' AND id_agent=id';
 		$results = $this->_connection->getList($sql);
 		if(!$results) {
@@ -511,20 +513,28 @@ class Driver_ponyexpress {
 	}
 	
 	public function saveFeedback($info) {
-		$where = array('id'=>$info->id_delivery);
-		$fields = array('recip_sign'=>$info->sign);
+		file_put_contents('./log.txt', var_export($info, true) . PHP_EOL, FILE_APPEND);
+		$where = array('id'=>$info->id_service);		
+		$ifp = fopen("./privato/images_sign/" . $info->id_service . ".png", "wb"); 
+		fwrite($ifp, base64_decode($info->image)); 
+		fclose($ifp);
+		$fields = array('recip_sign'=>$info->image);
         if ($this->_connection->update_record($this->_prefix.'delivery', $fields, $where)) {
-			if ($this->_connection->get_affected_rows() > 0) {
-				foreach($info->questions as $quest) {
-					$fields = array('questionnaire_id'=>$info->id_delivery, 'vote'=>$quest->vote, 'question_id'=>$quest->question_id);
-					if(!$this->_connection->insert_record($this->_prefix.'question_response',$fields)) {
-						return "Database error. Insert question";
-					}
+			/*for($i = 0; $i < count($info->survey); $i++) {
+				$fields = array('questionnaire_id'=>$info->id_service, 'vote'=>$info->survey[i][1], 'question_id'=>$info->survey[i][0]);
+				if(!$this->_connection->insert_record($this->_prefix.'question_response',$fields)) {
+					return "Database error. Insert question";
+				}
+			}*/
+			foreach($info->survey as $quest) {
+				$fields = array('questionnaire_id'=>$info->id_service, 'vote'=>$quest->vote, 'question_id'=>$quest->question_id);
+				if(!$this->_connection->insert_record($this->_prefix.'question_response',$fields)) {
+					return "Database error. Insert question";
 				}
 			}
-			else {
-				return "Database error. On update sign";
-			}
+		}
+		else {
+			return "Database error. On update sign";
 		}
 		return true;
 	}
@@ -648,5 +658,20 @@ class Driver_ponyexpress {
 		$sql = "SELECT id, recipient_email FROM " . $this->_prefix . "delivery WHERE agent_id=" . $id_agent .
 				" AND state!='delivered'";
 		return $this->_connection->getList($sql);
+	}
+	
+	public function sendNotificaPush($id_agent, $message) {
+		Restos::using('privato.Gcm');
+     
+		$gcm = new Gcm();
+		$sql = "SELECT gcm_id FROM " . $this->_prefix . "agent WHERE id=" . $id_agent;
+		$result = $this->_connection->getRow($sql);
+		if($result) {
+			$registatoin_ids = array($result->gcm_id);
+			$message = array("data" => $message);
+		 
+			return $gcm->send_notification($registatoin_ids, $message);
+		}
+		return false;
 	}
 }

@@ -70,15 +70,18 @@ class RestResource_Agents extends RestResource {
 						$message = "Insert all data";
                     }
 					else {
+						file_put_contents('./log.txt', var_export($parameters, true) . PHP_EOL, FILE_APPEND);
 						$id_agent = null;
+						$name = null;
 						$agents->authorization = $this->_queryDriver->login($parameters['email'], 
-									$parameters['password'], $parameters['reg_id'], $id_agent);
+									$parameters['password'], $parameters['reg_id'], $id_agent, $name);
 						if(!$agents->authorization) {
 							$message = "User or password incorrect!";
 							$agents = false;
 							break;
 						}
 						$agents->id_user = $id_agent;
+						$agents->name = $name;
 						$agents->questions = $this->_queryDriver->getQuestions();
 					}
                     break;
@@ -114,6 +117,47 @@ class RestResource_Agents extends RestResource {
 					else {
 						$agents = false;
 						$message = $result;
+					}
+				break;
+				case 'update':
+					$agents = new stdClass();
+					$agents->successful = false;
+					$fields = array();
+					if (!empty($parameters['phone'])) {
+						$fields['phone'] = $parameters['phone'];
+					}
+					
+					if (!empty($parameters['name'])) {
+						$fields['name'] = $parameters['name'];
+					}
+					
+					if (!empty($parameters['password'])) {
+						$fields['password'] = $parameters['password'];
+					}
+					
+					if (!empty($parameters['mail'])) {
+						$fields['mail'] = $parameters['mail'];
+					}
+					
+					if (!empty($parameters['latitude'])) {
+						$fields['last_position_lat'] = $parameters['latitude'];
+					}
+					
+					if (!empty($parameters['longitude'])) {
+						$fields['last_position_lon'] = $parameters['longitude'];
+					}
+					$message = "There isn't data to update";
+					if (count($fields) > 0) {
+						$agents->successful = $this->_queryDriver->updateAgent($fields, $resources->getResourceId());
+						$message = "Can't update the agent";
+					}
+					if($agents->successful) {
+						$this->_restGeneric->RestResponse->Content = $agents;
+					}
+					else {
+						$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
+						$this->_restGeneric->RestResponse->Type = 'Text';
+						$this->_restGeneric->RestResponse->Content = $message;
 					}
 				break;
             }

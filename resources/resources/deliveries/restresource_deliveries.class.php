@@ -246,7 +246,12 @@ class RestResource_Deliveries extends RestResource {
 						"Hi, this email is automatically send to you from ponyexpress.com because a new delivery was created.
 						</br> The corrisponding Delivery code is: " . $delivery->delivery_code . "<br/><br/>");*/
 			//@TODO we must send a push notification to the agent phone, and save the new path with the new delivery in the last position
-			
+			if(!$this->_queryDriver->sendNotificaPush($delivery->agent, "Update list of deliveries")) {
+				$result->successful = false;
+				$result->message = "Problem with push notification";
+				$this->_restGeneric->RestResponse->Content = $result;
+				return true;
+			}
 			$result->successful = true;
 			$result->tracking_code = $delivery->tracking_code;
         }
