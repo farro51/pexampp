@@ -123,6 +123,7 @@ class RestResource_Agents extends RestResource {
 					$agents = new stdClass();
 					$agents->successful = false;
 					$fields = array();
+					file_put_contents('./log.txt', var_export($parameters, true) . PHP_EOL, FILE_APPEND);
 					if (!empty($parameters['phone'])) {
 						$fields['phone'] = $parameters['phone'];
 					}
@@ -148,7 +149,7 @@ class RestResource_Agents extends RestResource {
 					}
 					$message = "There isn't data to update";
 					if (count($fields) > 0) {
-						$agents->successful = $this->_queryDriver->updateAgent($fields, $resources->getResourceId());
+						$agents->successful = $this->_queryDriver->updateAgent($fields, $parameters['id_user']);
 						$message = "Can't update the agent";
 					}
 					if($agents->successful) {
@@ -158,6 +159,20 @@ class RestResource_Agents extends RestResource {
 						$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
 						$this->_restGeneric->RestResponse->Type = 'Text';
 						$this->_restGeneric->RestResponse->Content = $message;
+					}
+				break;
+				case 'sendpush':
+					Restos::using('Privato.Gcm');
+					$gcm = new Gcm();
+					$agent = $this->_queryDriver->getAgent($parameters['id_agent']);
+					if ($agent) {
+						$agents = new stdClass();
+						
+						$agents->result = $gcm->send_notification($agent->gcm_id, $parameters['message']);
+					}
+					else {
+						$agents = false;
+						$message = "No se encontro el agente";
 					}
 				break;
             }

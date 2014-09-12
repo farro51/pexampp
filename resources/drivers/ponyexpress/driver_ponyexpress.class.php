@@ -102,6 +102,11 @@ class Driver_ponyexpress {
 		return false;
     }
     
+	public function getAgent($id){
+		$sql = 'SELECT * FROM ' . $this->_prefix . 'agent WHERE id=' . $id;
+		$agent = $this->_connection->getRow($sql);
+		return $agent;
+	}
     /**
      * 
      * Logout
@@ -181,14 +186,15 @@ class Driver_ponyexpress {
 	 */
 	public function searchAgent($lat_s, $lon_s, $lat_r, $lon_r) {
 		//Select the agents logged with their actual position
-		$sql = 'SELECT id as id_agent, last_position_lat as latitude, last_position_lon as longitude, gcm_id' .
+		$sql = 'SELECT id as id_agent, last_position_lat as latitude, last_position_lon as longitude, ' .
 				'0 as arrival_time_est, 0 as p_order from agent where status=' . $this->_connection->quote('logged', 'varchar');
 		
 		//Select the destinations for the agents logged
-		$sql2 = 'SELECT id_agent, longitude, latitude, arrival_time_est, p_order, 0 as gcm_id FROM ' . $this->_prefix . 
+		$sql2 = 'SELECT id_agent, longitude, latitude, arrival_time_est, p_order FROM ' . $this->_prefix . 
 				'agent, path_agent WHERE status=' . $this->_connection->quote('logged', 'varchar') . ' AND id_agent=id';
 		$results = $this->_connection->getList($sql);
 		if(!$results) {
+			echo "false 1";
 			return false;
 		}
 		if (count($results) == 1) {
@@ -203,11 +209,13 @@ class Driver_ponyexpress {
 		//Sort the list of agents available for the nearest to sender location
 		$agents_sort_s = $this->getListNearAgents($results, $lat_s, $lon_s);
 		if (!$agents_sort_s) {
+			echo "false 2";
 			return false;
 		}	
 		//Sort the list of agents available for the nearest to recipient location
 		$agents_sort_r = $this->getListNearAgents($results, $lat_r, $lon_r);
 		if (!$agents_sort_r) {
+			echo "false 3";
 			return false;
 		}
 		

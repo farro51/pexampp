@@ -20,7 +20,7 @@ class Gcm {
  
         $fields = array(
             'registration_ids' => $registatoin_ids,
-            'data' => $message,
+            'data' => array($message)
         );
  
         $headers = array(
