@@ -327,7 +327,7 @@ class Driver_ponyexpress {
 	
 	public function getAgentPath($id) {
 		$sql = 'SELECT sender_address, recipient_address, latitude, longitude, pick_up, id FROM ' . $this->_prefix . 'path_agent, ' . $this->_prefix . 'delivery WHERE id_agent=' . 
-				$this->_connection->quote($id, 'integer') . ' AND id_delivery=id ORDER BY p_order';
+				$this->_connection->quote($id, 'integer') . ' AND id_delivery=id ORDER BY p_order ASC';
 		$agent_path = $this->_connection->getList($sql);
 		if($agent_path){
 			$destinations = array();
