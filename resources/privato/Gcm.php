@@ -17,11 +17,18 @@ class Gcm {
  
         // Set POST variables
         $url = 'https://android.googleapis.com/gcm/send';
- 
-        $fields = array(
+		
+		$fields = new stdClass();
+        $fields->registration_ids = $registatoin_ids;
+		$mess = new stdClass();
+		$mess->message = $message;
+		$fields->data = $mess;
+		/*$fields = array(
             'registration_ids' => $registatoin_ids,
             'data' => array($message)
-        );
+        );*/
+
+		file_put_contents('./log.txt', var_export(json_encode($fields), true) . PHP_EOL, FILE_APPEND);
  
         $headers = array(
             'Authorization: key=' . GOOGLE_API_KEY,

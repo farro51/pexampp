@@ -101,8 +101,8 @@ $(document).ready(function(){
 								}
 								req2.onreadystatechange=function(){
 									if(req2.readyState==4 && (req2.status==200 || req2.status==0)){
-										progressbar.progressbar("destroy");
 										alert(req2.responseText);
+										progressbar.progressbar("destroy");
 										var obj = jQuery.parseJSON(req2.responseText);
 										
 										if (obj.successful == true) {
@@ -135,6 +135,7 @@ $(document).ready(function(){
 									}
 									else{
 										if(req2.readyState==4) {
+											alert(req2.responseText);
 											progressbar.progressbar("destroy");
 											$('#dialog').html("").append("Server error");
 											$('#dialog').dialog( "option", "buttons", [
@@ -146,7 +147,6 @@ $(document).ready(function(){
 													}
 											] );
 										}
-										alert("En false: " + req2.responseText);
 									}
 								}
 								req2.open("POST","resources/deliveries.json",true);
@@ -166,7 +166,7 @@ $(document).ready(function(){
 				else {
 					$('#dialog').html("").append("Error: " + obj.message);
 					$('#dialog').dialog({  
-					   title: "Successful transaction",
+					   title: "Message error",
 					   height: 200,
 					   width: 400,
 					   modal: true,

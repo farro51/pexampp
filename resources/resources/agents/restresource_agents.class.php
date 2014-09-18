@@ -98,7 +98,6 @@ class RestResource_Agents extends RestResource {
                     }
                     break;
 				case 'updatePath':
-					$agents = new stdClass();
 					if(empty($parameters['path'])) {
 						$message = "Wrong arguments";
 						$agents = false;
@@ -110,8 +109,21 @@ class RestResource_Agents extends RestResource {
 						$agents = false;
 						break;
 					}
-					$result = $this->_queryDriver->updatePathAgent($data, $parameters['agent']);
+					$path = array();
+					foreach($data as $loc) {
+						$position = new stdClass();
+						if (strpos($loc->id_service, 'p') === false) {
+							$position->type = 0;
+						}
+						else {
+							$position->type = 1;
+						}
+						$position->id_delivery = substr($loc->id_service, 0, -1);
+						$path[] = $position;
+					}
+					$result = $this->_queryDriver->updatePathAgent($path, $parameters['agent']);
 					if($result === true) {
+						$agents = new stdClass();
 						$agents->successful = true;
 					}
 					else {
@@ -161,20 +173,6 @@ class RestResource_Agents extends RestResource {
 						$this->_restGeneric->RestResponse->Content = $message;
 					}
 				break;
-				case 'sendpush':
-					Restos::using('Privato.Gcm');
-					$gcm = new Gcm();
-					$agent = $this->_queryDriver->getAgent($parameters['id_agent']);
-					if ($agent) {
-						$agents = new stdClass();
-						
-						$agents->result = $gcm->send_notification($agent->gcm_id, $parameters['message']);
-					}
-					else {
-						$agents = false;
-						$message = "No se encontro el agente";
-					}
-				break;
             }
             
         }
@@ -182,7 +180,7 @@ class RestResource_Agents extends RestResource {
             return false;
         }
         
-        if(!$agents) {//https://maps.googleapis.com/maps/api/distancematrix/json?origins=45.0757,7.64835|45.076,7.6556|45.0764,7.66432|45.0741,7.66839|45.0698,7.66462|45.0672,7.6662&destinations=45.0757,7.64835|45.076,7.6556|45.0764,7.66432|45.0741,7.66839|45.0698,7.66462|45.0672,7.6662&mode=walking&sensor=false
+        if(!$agents) {
             $this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
 			$this->_restGeneric->RestResponse->Type = 'Text';
 			$this->_restGeneric->RestResponse->Content = $message;

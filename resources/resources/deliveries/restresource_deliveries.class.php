@@ -42,7 +42,7 @@ class RestResource_Deliveries extends RestResource {
      */
     public function onPost(){
 
-        $resources = $this->_restGeneric->RestReceive->getResources();
+    	$resources = $this->_restGeneric->RestReceive->getResources();
         $parameters = $this->_restGeneric->RestReceive->getParameters();
         $result = null;
         if ($resources->isSpecificResources()){
@@ -66,7 +66,7 @@ class RestResource_Deliveries extends RestResource {
 					if(!$address_sender) {
 						$result->successful = false;
 						$result->message = "Sender address not found";
-						return true;
+						break;
 					}
 				
 					//Get info recipient address with google geocode
@@ -74,7 +74,7 @@ class RestResource_Deliveries extends RestResource {
 					if(!$address_recipient) {
 						$result->successful = false;
 						$result->message = "Recipient address not found";
-						return true;
+						break;
 					}
 											
 					$lat_s = $address_sender->results[0]->geometry->location->lat;
@@ -246,7 +246,8 @@ class RestResource_Deliveries extends RestResource {
 						"Hi, this email is automatically send to you from ponyexpress.com because a new delivery was created.
 						</br> The corrisponding Delivery code is: " . $delivery->delivery_code . "<br/><br/>");*/
 			//@TODO we must send a push notification to the agent phone, and save the new path with the new delivery in the last position
-			if(!$this->_queryDriver->sendNotificaPush($delivery->agent, "Update list of deliveries")) {
+			$res = $this->_queryDriver->sendNotificaPush($delivery->agent, "Update list of deliveries");
+			if(!$res) {
 				$result->successful = false;
 				$result->message = "Problem with push notification";
 				$this->_restGeneric->RestResponse->Content = $result;

@@ -1,9 +1,8 @@
 <h2>Richiesta di servizio</h2>
-<p><em>Validate <a href="http://validator.w3.org/check?uri=referer" rel="nofollow">XHTML</a> &amp; <a href="http://jigsaw.w3.org/css-validator/check/referer" rel="nofollow">CSS</a>. In quam nibh, placerat ac, porta ac, molestie non, purus. Curabitur sem ante, condimentum non, cursus quis, eleifend non, libero. Nunc a nulla. Suspendisse vitae orci a ligula egestas bibendum. Vestibulum ultrices. Pellentesque tempus sapien nec sem commodo ullamcorper. Aenean neque.</em></p>
 <div class="post_header">
 	<div class="post_date">1</div>
-		<h2>Inserisci i dati</h2>
-	</div>
+	<h2>Inserisci i dati</h2>
+</div>
 <div class="post_inner">
 	<form id="form1">
 		<fieldset>
