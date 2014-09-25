@@ -20,8 +20,8 @@
                 "ConnectionString" : {
                     "server" : "localhost",
                     "dbuser" : "ponyedb",
-                    "dbpass" : "Federico01#",
-                    "dbname" : "pony_mayo_11"
+                    "dbpass" : "Pony_data1",
+                    "dbname" : "ponyexpress_db"
                 }                
             }
         }

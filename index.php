@@ -78,11 +78,11 @@ ddsmoothmenu.init({
 
 	<div id="templatemo_header">
     
-    	<div id="site_title"><h1><a href="http://neuronical.org/ponyexpress/" target="_parent">Home</a></h1></div>
+    	<div id="site_title"><h1><a href="http://localhost/ponyexpress/" target="_parent">Home</a></h1></div>
         
         <div id="templatemo_menu" class="ddsmoothmenu">
             <ul>
-              	<li><a href="index.html" class="selected">Home</a></li>
+              	<li><a href="index.php" class="selected">Home</a></li>
           		<li><a id="link_about" href="#">About</a>
               	</li>
           		<li><a id="link_services" href="#">Services</a>
@@ -106,8 +106,8 @@ ddsmoothmenu.init({
     	<div class="col_fw">
         	<div class="col_w460 float_l">
            	  <h2>Un po' di Pony Express</h2>
-                <img src="images/templatemo_image_01.png" alt="image 01" class="float_l" />
-                <img src="images/templatemo_image_02.jpg" alt="image 02" height="178" class="float_r" />
+                <img src="img/templatemo_image_01.png" alt="image 01" class="float_l" />
+                <img src="img/templatemo_image_02.jpg" alt="image 02" height="178" class="float_r" />
                 <div class="cleaner h20">
                   <p>&nbsp;</p>
                   <p>Da qualche anni <b>Pony Express</b> consegna buste, pacchi e plichi con rapidità e sicurezza a Torino e dintorni. I nostri clienti richiedono la consegna entro al massimo un'ora dal momento della loro chiamata e per questo motivo, oltre </span><span class="cf1 fs22 ff1">ad utilizzare un servizio computerizzato, con la possibilità di prenotare i ritiri online, ci avvaliamo di personale altamente selezionato, sempre in contatto con cellulare aziendale e approvato solo dopo attenta verifica. Affidarci un plico significa metterlo in mani sicure..</p>
@@ -117,7 +117,7 @@ ddsmoothmenu.init({
                 <div class="cleaner h20"></div>
 </div>
             <div class="col_w460 float_r">
-            	<h2><img src="images/im/tracking-packages.jpg" width="379" height="377" /></h2>
+            	<h2><img src="img/tracking-packages.jpg" width="379" height="377" /></h2>
             	<div class="col_w460">          	  </div>
             </div>
             <div class="cleaner"></div>

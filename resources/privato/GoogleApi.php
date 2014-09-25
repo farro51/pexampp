@@ -15,14 +15,6 @@
 		}
 		
 		public static function getDistance($origin, $destination) {
-			/*$url = GoogleApi::URL_GOOGLE_DISTANCE;
-			$url .= http_build_query(array('origins'=>$origin, 'destinations'=>$destination, 'mode'=>'walking', 'sensor'=>'false'));
-			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $url);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-			$distance = curl_exec($ch);
-			curl_close($ch);
-			return $distance;*/
 			return GoogleApi::curl_get(GoogleApi::URL_GOOGLE_DISTANCE, array('origins'=>$origin, 'destinations'=>$destination, 'mode'=>'walking', 'sensor'=>'false'));
 		}
 		

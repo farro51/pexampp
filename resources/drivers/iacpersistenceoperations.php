@@ -28,18 +28,18 @@
 interface iACPersistenceOperations {
     /**
      * 
-     * Return a alert as prototype
-     * @param $gambler_id User identification
-     * @return object User
+     * Return a delivery as prototype
+     * @param $delivery_id Delivery identification
+     * @return object Delivery
      */
-    public function getDelivery($user_id);
+    public function getDelivery($delivery_id);
     /**
      * 
-     * Return a user as prototype
-     * @param $gambler_id User identification
-     * @return object User
+     * Return a agent as prototype
+     * @param $agent_id Agent identification
+     * @return object Agent
      */
-    public function getAgent($user_id);
+    public function getAgent($agent_id);
     
     
 

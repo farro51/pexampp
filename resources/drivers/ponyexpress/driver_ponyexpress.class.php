@@ -117,12 +117,29 @@ class Driver_ponyexpress {
      * @param $username user identifier
      * @return boolean true if success
      */
-    public function logout($username){
-        $fields = array('status'=>'unlogged');
-		$where = array('id'=>$this->_connection->quote($username, 'integer'), 
-						'status'=>'logged');
+    public function logout($username, $isValid = true){
+        $fields = array('status'=>$status);
 		try {
-			$result = $this->_connection->update_record($this->_prefix.'agent', $fields, $where);
+			if(!$isValid) {
+				$fields = array('status'=>'inactive');
+				$where = array('id'=>$this->_connection->quote($username, 'integer'),
+						'status'=>'logged');
+				$result = $this->_connection->update_record($this->_prefix.'agent', $fields, $where);
+			}
+			else {
+				$fields = array('status'=>'unlogged');
+				$where = array('id'=>$this->_connection->quote($username, 'integer'),
+						'status'=>'logged');
+				$result = $this->_connection->update_record($this->_prefix.'agent', $fields, $where);
+				if($result) {
+					return true;
+				}
+				else {
+					$where = array('id'=>$this->_connection->quote($username, 'integer'),
+							'status'=>'inactive');
+					$result = $this->_connection->update_record($this->_prefix.'agent', $fields, $where);
+				}
+			}
 		}catch (Exception $e) {
 			return false;
 		}
@@ -135,8 +152,11 @@ class Driver_ponyexpress {
 		return $results;
     }
 
-    public function updateAgent($fields, $id){
-		$where = array('id'=>$this->_connection->quote($id, 'varchar'));
+    public function updateAgent($fields, $id, $pass = null){
+    	$where = array('id'=>$this->_connection->quote($id, 'varchar'));
+    	if (isset($pass)) {
+    		$where['password'] = $pass;
+    	}
 		try {
 			if ($this->_connection->update_record($this->_prefix.'agent', $fields, $where)) {
 				if ($this->_connection->get_affected_rows() > 0) {
@@ -164,12 +184,15 @@ class Driver_ponyexpress {
 		$mail->Subject = $title;
 		$mail->Body = $body;
 		$mail->AddAddress($recipent_email);
-		if(!$mail->Send()){
-			file_put_contents('./log.txt', "Mailer Error: " . $mail->ErrorInfo . PHP_EOL, FILE_APPEND);
-			return false;//"Mailer Error: " . $mail->ErrorInfo;
-		}
-		else{
-			return true;
+		try {
+			if(!$mail->Send()){
+				return false;
+			}
+			else{
+				return true;
+			}
+		} catch (phpmailerException $e) {
+			return false;
 		}
 	}
 
@@ -198,9 +221,7 @@ class Driver_ponyexpress {
         return $result;
 	}
 	
-	/**
-	 * @todo Realizar una asignacion mas inteligente
-	 */
+	
 	public function searchAgent($lat_s, $lon_s, $lat_r, $lon_r) {
 		//Select the agents logged with their actual position
 		$sql = 'SELECT id as id_agent, last_position_lat as latitude, last_position_lon as longitude, ' .
@@ -261,18 +282,6 @@ class Driver_ponyexpress {
 	}
 	
 	public function getDistanceMatrix($destinations) {
-		/*$origins = array();
-		foreach ($destinations as $dest) {
-			$origins[] = $dest->latitude . "," . $dest->longitude;
-		}
-		$s_origins = implode("|", $origins);
-		$distances = GoogleApi::getDistance($s_origins, $s_origins);
-		file_put_contents('./log.txt', var_export("DISTANCES: " .  PHP_EOL . $distances, true) . PHP_EOL, FILE_APPEND);
-	    $dist_dec = json_decode($distances);
-	    if (!$dist_dec || $dist_dec->status != "OK") {
-	    	return false;
-	    }
-	    $rows = $dist_dec->rows; */
 	    $i = 0;
 	    $j = 0;
 		foreach($destinations as $orig) {
@@ -290,20 +299,6 @@ class Driver_ponyexpress {
 			$j = 0;
 			$i++;
 		}
-	    /*foreach($rows as $row) {
-	    	foreach ( $row->elements as $element ) {
-	    		if ($i == $j) {
-	    			$dist_matrix[$i][$j++] = null;
-	    			continue;
-	    		}
-				$dist = new stdClass();
-				$dist->distance = $element->distance->value;
-				$dist->time_est = $element->duration->value / 2;
-				$dist_matrix[$i][$j++] = $dist;
-			}
-			$j = 0;
-			$i++;
-	    }*/
 		return $dist_matrix;
 	}
 	
@@ -405,8 +400,9 @@ class Driver_ponyexpress {
 	}
 	
 	public function getAgentDestinations($id) {
-		$sql = 'SELECT latitude, longitude, p_order, id_delivery, pick_up, arrival_time_est FROM ' . $this->_prefix . 'path_agent WHERE id_agent=' . 
-				$this->_connection->quote($id, 'integer') . ' ORDER BY p_order ASC';
+		$sql = 'SELECT latitude, longitude, p_order, id_delivery, pick_up, arrival_time_est, recipient_email FROM '
+					. $this->_prefix . 'path_agent, ' . $this->_prefix . 'delivery WHERE id_agent='
+					. $this->_connection->quote($id, 'integer') . ' AND id=id_delivery ORDER BY p_order ASC';
 		return $this->_connection->getList($sql);
 	}
 	
@@ -431,19 +427,10 @@ class Driver_ponyexpress {
 			}
 		}
 
-		$tour = array(0);//new int[distancesMatrix.length];
+		$tour = array(0);
 		$closest = -1;
 		for( $i = 1; $i < count($destinations); $i++ ) {
 			$dist = 10000000;
-			/*for( $j = 0; $j < count($destinations); $j++ ) {
-				if ($tour[$i-1] == $j) {
-					continue;
-				}
-				if( $avail[$j] && $dist_matrix[$tour[$i-1]][$j]->distance < $dist ){   
-					$dist = $dist_matrix[$tour[$i-1]][$j]->distance;
-					$closest = $j;
-				}   // end if: new nearest neighbor
-			}*/
 			foreach ($avail as $pos) {
 				if( $dist_matrix[$tour[$i-1]][$pos]->distance < $dist ){
 					$dist = $dist_matrix[$tour[$i-1]][$pos]->distance;
@@ -468,17 +455,11 @@ class Driver_ponyexpress {
 	
 	public function insertPathAgent($destinations, $dist_matrix, $order_path, $agent_id) {
 		$arr_est = 0;
-		/*$fields = array('p_order'=>0, 'arrival_time_est'=>0);
-		$where = array('id_agent'=>$agent_id);
-		$this->_connection->DB->query("DELETE FROM " . $this->_prefix.'path_agent' . " WHERE id_agent=" . $agent_id);*/
-		file_put_contents('./log.txt', var_export($dist_matrix, true) . PHP_EOL, FILE_APPEND);
 		for($i = 1; $i < count($destinations); $i++) {
 			$distance = $this->getDistance($dist_matrix[$order_path[$i-1]][$order_path[$i]]->pick_up_coor, $dist_matrix[$order_path[$i-1]][$order_path[$i]]->dest_coor);
 			if($distance == null) {
 				return false;
 			}
-			file_put_contents('./log.txt', "DISTANCE: " . $dist_matrix[$order_path[$i-1]][$order_path[$i]]->pick_up_coor . " " .
-								$dist_matrix[$order_path[$i-1]][$order_path[$i]]->dest_coor . PHP_EOL . var_export($distance, true) . PHP_EOL, FILE_APPEND);
 			$arr_est += $distance->duration->value;
 			
 			if ($order_path[$i] < (count($destinations) - 2)) {
@@ -509,27 +490,26 @@ class Driver_ponyexpress {
 	}
 	
 	public function getTrackingInfo($code) {
-		/*$sql = 'SELECT pickup_time, delivery_time, pickup_time_est, delivery_time_est, state, last_position_lat, ' .
-				'last_position_lon, sender_address, recipient_address FROM ' . $this->_prefix . 'delivery, ' . $this->_prefix . 
-				'agent as a WHERE agent_id=a.id AND tracking_code=' . $this->_connection->quote($code, 'integer');*/
-		$sql = 'SELECT pickup_time, delivery_time, pickup_time_est, delivery_time_est, state FROM ' . 
-				$this->_prefix . 'delivery WHERE tracking_code=' . $this->_connection->quote($code, 'varchar');
+		$sql = 'SELECT pickup_time, delivery_time, state, pick_up, arrival_time_est FROM ' . $this->_prefix . 'delivery, ' . 
+				$this->_prefix . 'path_agent WHERE tracking_code=' . $this->_connection->quote($code, 'varchar') . 
+				' AND id=id_delivery ORDER BY arrival_time_est ASC';
 		$result = $this->_connection->getRow($sql);
 		if($result) {
+			date_default_timezone_set('Europe/Rome');
 			$tracking_info = new stdClass();
 			$tracking_info->state = $result->state;
 			if ($tracking_info->state == "waiting") {
-				$tracking_info->pickup_time_est = gmdate("Y-m-d H:i:s", $result->pickup_time_est + (30*60));
+				$tracking_info->pickup_time_est = date("d-m-Y H:i:s", $result->arrival_time_est + (30*60) + time());
 				return $tracking_info;
 			}
 			if ($tracking_info->state == "delivering") {
-				$tracking_info->pickup_time = $result->pickup_time;
-				$tracking_info->delivery_time_est = gmdate("Y-m-d H:i:s", $result->delivery_time_est + (30*60));
+				$tracking_info->pickup_time = date("d-m-Y H:i:s", $result->pickup_time);
+				$tracking_info->delivery_time_est = date("d-m-Y H:i:s", $result->arrival_time_est + (30*60) + time());
 				return $tracking_info;
 			}
 			if ($tracking_info->state == "delivered") {
-				$tracking_info->pickup_time = $result->pickup_time;
-				$tracking_info->delivery_time = $result->delivery_time;
+				$tracking_info->pickup_time = date("d-m-Y H:i:s", $result->pickup_time);
+				$tracking_info->delivery_time = date("d-m-Y H:i:s", $result->delivery_time);
 				return $tracking_info;
 			}
 		}
@@ -563,20 +543,10 @@ class Driver_ponyexpress {
 	}
 	
 	public function saveFeedback($info) {
-		file_put_contents('./log.txt', var_export($info, true) . PHP_EOL, FILE_APPEND);
 		$where = array('id'=>$info->id_service);		
-		$ifp = fopen("./privato/images_sign/" . $info->id_service . ".png", "wb"); 
-		fwrite($ifp, base64_decode($info->image)); 
-		fclose($ifp);
 		$fields = array('recip_sign'=>$info->image);
 		try {
 			if ($this->_connection->update_record($this->_prefix.'delivery', $fields, $where)) {
-				/*for($i = 0; $i < count($info->survey); $i++) {
-				 $fields = array('questionnaire_id'=>$info->id_service, 'vote'=>$info->survey[i][1], 'question_id'=>$info->survey[i][0]);
-				if(!$this->_connection->insert_record($this->_prefix.'question_response',$fields)) {
-				return "Database error. Insert question";
-				}
-				}*/
 				foreach($info->survey as $quest) {
 					$fields = array('questionnaire_id'=>$info->id_service, 'vote'=>$quest->vote, 'question_id'=>$quest->question_id);
 					if(!$this->_connection->insert_record($this->_prefix.'question_response',$fields)) {
@@ -593,18 +563,29 @@ class Driver_ponyexpress {
 		return true;
 	}
 	
+	/**
+	 * @todo Send email to recipient
+	 * 
+	 * 
+	 * @param unknown $path
+	 * @param unknown $id_agent
+	 * @return string|boolean|Ambigous <string, boolean, multitype:unknown >
+	 */
 	public function updatePathAgent($path, $id_agent) {
 		$locations[] = $this->getAgentPosition($id_agent);
 		if(!$locations[0]) {
 			return "Can't find agent actual position";
 		}
+		date_default_timezone_set('Europe/Rome');
+		$title = 'Delivery expected time was changed';
+		$body = "Hi, this email is automatically send to you from ponyexpress.com because the delivery was updated.
+						</br> The new delivery expected time is: ";
 		$destinations = $this->getAgentDestinations($id_agent);
 		$sinc_path = $this->checkPathAgent($path, $destinations);
 		if(is_array($sinc_path)) {
 			$equal = true;
 			$time = 0;
 			$locations = array_merge($locations, $sinc_path);
-			$dest_emails = $this->getDestinationEmails($id_agent);
 			for($i = 0; $i < count($path); $i++) {
 				if(($path[$i]->id_delivery == $destinations[$i]->id_delivery) && ($path[$i]->type == $destinations[$i]->pick_up) && $equal) {
 					continue;
@@ -625,27 +606,7 @@ class Driver_ponyexpress {
 				} catch (Exception $e) {
 					return "Database error";
 				}
-				$rec_email = null;
-				foreach($dest_emails as $email) {
-					if($email->id == $path[$i]->id_delivery) {
-						$rec_email = $email->recipent_email;
-					}
-				}
-				if($rec_email != null) {
-					$title = 'Delivery expected time was changed';
-					$body = "Hi, this email is automatically send to you from ponyexpress.com because the delivery was updated.
-						</br> The new delivery expected time is: " . gmdate("Y-m-d H:i", (time() + $time + (30*60))) . "<br/><br/>";
-					if(!$this->sendMail($rec_email, $title, $body)) {
-						return "Error to send email to $rec_email";
-					}
-				}
-				else {
-					return "Problem to find recipient email";
-				}
-				
-				/*$dist->distance = $element->distance->value;
-				$dist->time_est = $element->duration->value / 2;*/
-				//if ($this->_connection->update_record($this->_prefix.'delivery', $fields, $where)) {}
+				$this->sendMail($sinc_path[$i]->email, $title, $body . date("d-m-Y H:i:s", (time() + $time + (30*60))) . "<br/><br/>");
 			}
 			return true;
 		}
@@ -698,6 +659,7 @@ class Driver_ponyexpress {
 			for($j = 0; $j < count($actual_path); $j++) {
 				if(($actual_path[$j]->id_delivery == $new_path[$i]->id_delivery) && ($actual_path[$j]->pick_up == $new_path[$i]->type)){
 					$sinc_path[$i] = $new_path[$i];
+					$sinc_path[$i]->email = $actual_path[$j]->recipient_email;
 					$actual_path[$j]->id_delivery = 0;
 					$actual_path[$j]->pick_up = -1;
 					$found = true;
@@ -711,13 +673,7 @@ class Driver_ponyexpress {
 		}
 		return $sinc_path;
 	}
-	
-	public function getDestinationEmails($id_agent) {
-		$sql = "SELECT id, recipient_email FROM " . $this->_prefix . "delivery WHERE agent_id=" . $id_agent .
-				" AND state!='delivered'";
-		return $this->_connection->getList($sql);
-	}
-	
+
 	public function sendNotificaPush($id_agent, $message) {
 		Restos::using('privato.Gcm');
      

@@ -71,7 +71,7 @@ $(document).ready(function(){
 			if(req.readyState==4 && (req.status==200 || req.status==0)){
 				var obj = jQuery.parseJSON(req.responseText);
 				if (obj.successful == true) {
-					$('#dialog').html("").append("The delivery price is: " + (obj.distance/1000) + " euros.</br>" +
+					$('#dialog').html("").append("The delivery price is: " + (obj.distance/1000).toFixed(2) + " euros.</br>" +
 								"Do you want to proceed?");
 					$('#dialog').dialog({
 					   title: "Successful transaction",
@@ -101,7 +101,6 @@ $(document).ready(function(){
 								}
 								req2.onreadystatechange=function(){
 									if(req2.readyState==4 && (req2.status==200 || req2.status==0)){
-										alert(req2.responseText);
 										progressbar.progressbar("destroy");
 										var obj = jQuery.parseJSON(req2.responseText);
 										

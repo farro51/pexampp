@@ -20,7 +20,7 @@
 /**
  * String list from English lang 
  *
- * @author Federico Arroyave <malevilema@gmail.com>
+ * @author Federico Arroyave <farroyave51@gmail.com>
  * @version 0.1
  */
 

@@ -70,7 +70,6 @@ class RestResource_Agents extends RestResource {
 						$message = "Insert all data";
                     }
 					else {
-						file_put_contents('./log.txt', var_export($parameters, true) . PHP_EOL, FILE_APPEND);
 						$id_agent = null;
 						$name = null;
 						$agents->authorization = $this->_queryDriver->login($parameters['email'], 
@@ -86,6 +85,17 @@ class RestResource_Agents extends RestResource {
 					}
                     break;
                 case 'logout':
+                	if(empty($parameters['id_user'])) {
+                		$message = "Wrong user id";
+                		$agents = false;
+                		break;
+                	}
+                	if(count($this->_queryDriver->getAgentDestinations($parameters['id_user'])) > 0) {
+                		$response = $this->_queryDriver->logout($parameters['id_user'], true);
+                		$message = "There are deliveries to give";
+                		$agents = false;
+                		break;
+                	}
                     $response = $this->_queryDriver->logout($parameters['id_user']);
                     if($response){
                         $agents = new stdClass();
@@ -119,6 +129,8 @@ class RestResource_Agents extends RestResource {
 							$position->type = 1;
 						}
 						$position->id_delivery = substr($loc->id_service, 0, -1);
+						$position->latitude = $loc->latitude;
+						$position->longitude = $loc->longitude;
 						$path[] = $position;
 					}
 					$result = $this->_queryDriver->updatePathAgent($path, $parameters['agent']);
@@ -135,21 +147,12 @@ class RestResource_Agents extends RestResource {
 					$agents = new stdClass();
 					$agents->successful = false;
 					$fields = array();
-					file_put_contents('./log.txt', var_export($parameters, true) . PHP_EOL, FILE_APPEND);
-					if (!empty($parameters['phone'])) {
-						$fields['phone'] = $parameters['phone'];
-					}
 					
-					if (!empty($parameters['name'])) {
-						$fields['name'] = $parameters['name'];
-					}
+					$pass = null;
 					
 					if (!empty($parameters['password'])) {
-						$fields['password'] = $parameters['password'];
-					}
-					
-					if (!empty($parameters['mail'])) {
-						$fields['mail'] = $parameters['mail'];
+						$fields['password'] = $parameters['new_password'];
+						$pass = $parameters['password'];
 					}
 					
 					if (!empty($parameters['latitude'])) {
@@ -159,18 +162,18 @@ class RestResource_Agents extends RestResource {
 					if (!empty($parameters['longitude'])) {
 						$fields['last_position_lon'] = $parameters['longitude'];
 					}
-					$message = "There isn't data to update";
 					if (count($fields) > 0) {
-						$agents->successful = $this->_queryDriver->updateAgent($fields, $parameters['id_user']);
-						$message = "Can't update the agent";
-					}
-					if($agents->successful) {
-						$this->_restGeneric->RestResponse->Content = $agents;
+						if($this->_queryDriver->updateAgent($fields, $parameters['id_user'], $pass)) {
+							$agents->successful = true;
+						}
+						else {
+							$agents = false;
+							$message = "Can't update the agent";
+						}
 					}
 					else {
-						$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
-						$this->_restGeneric->RestResponse->Type = 'Text';
-						$this->_restGeneric->RestResponse->Content = $message;
+						$agents = false;
+						$message = "There isn't data to update";
 					}
 				break;
             }
@@ -193,55 +196,4 @@ class RestResource_Agents extends RestResource {
         return true;
     }
     
-    public function onPut() {
-    	$resources = $this->_restGeneric->RestReceive->getResources();
-    	$parameters = $this->_restGeneric->RestReceive->getProcessedContent();        
-      	$parameters = array_merge($parameters, $this->_restGeneric->RestReceive->getParameters());
-        $agents = null;
-        if ($resources->isSpecificResources()){
-        	$agents = new stdClass();
-			$agents->successful = false;
-			$fields = array();
-			if (!empty($parameters['phone'])) {
-				$fields['phone'] = $parameters['phone'];
-			}
-			
-			if (!empty($parameters['name'])) {
-				$fields['name'] = $parameters['name'];
-			}
-			
-			if (!empty($parameters['password'])) {
-				$fields['password'] = $parameters['password'];
-			}
-			
-			if (!empty($parameters['mail'])) {
-				$fields['mail'] = $parameters['mail'];
-			}
-			
-			if (!empty($parameters['latitude'])) {
-				$fields['last_position_lat'] = $parameters['latitude'];
-			}
-			
-			if (!empty($parameters['longitude'])) {
-				$fields['last_position_lon'] = $parameters['longitude'];
-			}
-			$message = "There isn't data to update";
-			if (count($fields) > 0) {
-				$agents->successful = $this->_queryDriver->updateAgent($fields, $resources->getResourceId());
-				$message = "Can't update the agent";
-			}
-			if($agents->successful) {
-				$this->_restGeneric->RestResponse->Content = $agents;
-			}
-			else {
-				$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
-				$this->_restGeneric->RestResponse->Type = 'Text';
-				$this->_restGeneric->RestResponse->Content = $message;
-			}
-        }
-        else {
-            return false;
-        }
-        return true;
-    }
 }

@@ -19,7 +19,7 @@
 /**
  * Class to manage the segments resources
  *
- * @author Cristina Madrigal <malevilema@gmail.com>
+ * @author Federico Arroyave <farroyave51@gmail.com>
  * @version 0.1
  */
 class RestResource_Deliveries extends RestResource {
@@ -128,10 +128,10 @@ class RestResource_Deliveries extends RestResource {
 						$this->_restGeneric->RestResponse->Content = "Bad json format";
 						return true;
 					}
-					$result = $this->_queryDriver->saveFeedback($data);
-					if($result === true) {
-						$agents = new stdClass();
-						$agents->successful = true;
+					$results = $this->_queryDriver->saveFeedback($data);
+					if($results === true) {
+						$result = new stdClass();
+						$result->successful = true;
 					}
 					else {
 						$this->_restGeneric->RestResponse->setHeader(HttpHeaders::$STATUS_CODE, HttpHeaders::getStatusCode('404'));
@@ -166,23 +166,14 @@ class RestResource_Deliveries extends RestResource {
 			$delivery = new Delivery($parameters['name_s'], $parameters['email_s'], $parameters['address_s'], 
 									$parameters['name_r'], $parameters['email_r'], $parameters['address_r']);
 									
-			file_put_contents('./log.txt', 'name_s ' . $parameters['name_s'] . ' email_s ' . $parameters['email_s'] . ' address_s ' .
-					$parameters['address_s'] . ' name_r ' . $parameters['name_r'] . ' email_r ' . $parameters['email_r'] . ' address_r ' .
-					$parameters['address_r'] . PHP_EOL, FILE_APPEND);						
-									
 			$lat_s = $address_sender->results[0]->geometry->location->lat;
 			$lon_s = $address_sender->results[0]->geometry->location->lng;
 			$lat_r = $address_recipient->results[0]->geometry->location->lat;
 			$lon_r = $address_recipient->results[0]->geometry->location->lng;
 			
-			$delivery->agent = $this->_queryDriver->searchAgent($lat_s, $lon_s, $lat_r, $lon_r);//Agent 1: 45.075597, 7.644060 (2 min) 45.075658, 7.648352 (3.3 min) 45.076022, 7.655604
-			//(4.5 min) 45.076416, 7.664316 (3.5) 45.074143, 7.668393 (3.5) 45.069809, 7.664617 (2.5 min) 45.067172, 7.666205
-			/**
-			 * Agent2 45.051499, 7.674659 (4 min) 45.057168, 7.676805 (4.5 min) 45.062686, 7.678993 (2.5 min) 45.064383, 7.673672 (3 min) 45.067960, 7.676547
-			 */
-			file_put_contents('./log.txt', var_export($delivery->agent, true) . PHP_EOL, FILE_APPEND);
-			if($delivery->agent === false) {
+			$delivery->agent = $this->_queryDriver->searchAgent($lat_s, $lon_s, $lat_r, $lon_r);
 			
+			if($delivery->agent === false) {
 				$result->successful = false;
 				$result->message = "There aren't avaliable agents";
 				$this->_restGeneric->RestResponse->Content = $result;
@@ -190,7 +181,6 @@ class RestResource_Deliveries extends RestResource {
 			}
 			
 			//We found the agent
-			file_put_contents('./log.txt', "We found the agent" . PHP_EOL, FILE_APPEND);
 			$destinations = $this->_queryDriver->getAgentListPositions($delivery->agent, $lat_s, $lon_s, $lat_r, $lon_r);
 			if(!$destinations) {
 				$result->successful = false;
@@ -198,9 +188,7 @@ class RestResource_Deliveries extends RestResource {
 				$this->_restGeneric->RestResponse->Content = $result;
 				return true;
 			}
-			file_put_contents('./log.txt', var_export($destinations, true) . PHP_EOL, FILE_APPEND);
 			$dist_matrix = $this->_queryDriver->getDistanceMatrix($destinations);
-			file_put_contents('./log.txt', var_export($dist_matrix, true) . PHP_EOL, FILE_APPEND);
 			if (!$dist_matrix) {
 				$result->successful = false;
 				$result->message = "Problem with distance matrix";
@@ -214,7 +202,6 @@ class RestResource_Deliveries extends RestResource {
 			else {
 				$order_path = $this->_queryDriver->getAgentOrderPath($dist_matrix, $destinations);
 			}
-			file_put_contents('./log.txt', var_export($order_path, true) . PHP_EOL, FILE_APPEND);
 			if (!$order_path) {
 				$result->successful = false;
 				$result->message = "Problem with order path";
@@ -239,13 +226,12 @@ class RestResource_Deliveries extends RestResource {
 				$this->_restGeneric->RestResponse->Content = $result;
 				return true;
 			}
-			/*$this->_queryDriver->sendMail($delivery->sender_email, 'Tracking credentials', 
+			$this->_queryDriver->sendMail($delivery->sender_email, 'Tracking credentials', 
 						"Hi, this email is automatically send to you from ponyexpress.com because a new delivery was created.
 						</br> The corrisponding Tracking code is: " . $delivery->tracking_code . "<br/><br/>");
 			$this->_queryDriver->sendMail($delivery->recipient_email, 'Delivery credentials', 
 						"Hi, this email is automatically send to you from ponyexpress.com because a new delivery was created.
-						</br> The corrisponding Delivery code is: " . $delivery->delivery_code . "<br/><br/>");*/
-			//@TODO we must send a push notification to the agent phone, and save the new path with the new delivery in the last position
+						</br> The corrisponding Delivery code is: " . $delivery->delivery_code . "<br/><br/>");
 			$res = $this->_queryDriver->sendNotificaPush($delivery->agent, "Update list of deliveries");
 			if(!$res) {
 				$result->successful = false;
@@ -261,34 +247,5 @@ class RestResource_Deliveries extends RestResource {
 
         return true;
     }
-    
-    /*public function onPut(){
 
-        $resources = $this->_restGeneric->RestReceive->getResources();
-    	$parameters = $this->_restGeneric->RestReceive->getProcessedContent();        
-      	$parameters = array_merge($parameters, $this->_restGeneric->RestReceive->getParameters());
-		$result = new stdClass();
-        if ($resources->isSpecificResources()){
-            switch($resources->getResourceId()){
-                case 'set_tracking_code':
-					$result->successful = $this->_queryDriver->reachedDestination($parameters['code'], "tracking_code", "delivering", "pickup_time");
-                break;
-                case 'set_delivery_code':
-					$result->successful = $this->_queryDriver->reachedDestination($parameters['code'], "delivery_code", "delivered", "delivery_time");
-					//Guardar la imagen y las preguntas
-                break;
-				case 'feedback':
-					$result->successful = true;
-					$data = json_decode(file_get_contents('php://input'), true);
-					var_dump($data);
-				break;
-            }
-        }
-        else {
-        	return false;
-        }
-        $this->_restGeneric->RestResponse->Content = $result;
-
-        return true;
-    }*/
 }

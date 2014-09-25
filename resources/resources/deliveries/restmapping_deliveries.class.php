@@ -17,9 +17,9 @@
  */
 
 /**
- * Class to manage the segments resources mapping
+ * Class to manage the deliveries resources mapping
  *
- * @author Cristina Madrigal <malevilema@gmail.com>
+ * @author Federico Arroyave <farroyave51@gmail.com>
  * @version 0.1
  */
 class RestMapping_Deliveries extends RestMapping {
