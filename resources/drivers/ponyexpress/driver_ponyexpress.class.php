@@ -400,7 +400,7 @@ class Driver_ponyexpress {
 	}
 	
 	public function getAgentDestinations($id) {
-		$sql = 'SELECT latitude, longitude, p_order, id_delivery, pick_up, arrival_time_est, recipient_email FROM '
+		$sql = 'SELECT latitude, longitude, p_order, id_delivery, pick_up, arrival_time_est, recipient_email, 1 as valid FROM '
 					. $this->_prefix . 'path_agent, ' . $this->_prefix . 'delivery WHERE id_agent='
 					. $this->_connection->quote($id, 'integer') . ' AND id=id_delivery ORDER BY p_order ASC';
 		return $this->_connection->getList($sql);
@@ -564,7 +564,6 @@ class Driver_ponyexpress {
 	}
 	
 	/**
-	 * @todo Send email to recipient
 	 * 
 	 * 
 	 * @param unknown $path
@@ -606,7 +605,9 @@ class Driver_ponyexpress {
 				} catch (Exception $e) {
 					return "Database error";
 				}
-				$this->sendMail($sinc_path[$i]->email, $title, $body . date("d-m-Y H:i:s", (time() + $time + (30*60))) . "<br/><br/>");
+				if($path[$i]->type == 0) {
+					$this->sendMail($sinc_path[$i]->email, $title, $body . date("d-m-Y H:i:s", (time() + $time + (30*60))) . "<br/><br/>");
+				}
 			}
 			return true;
 		}
@@ -657,11 +658,12 @@ class Driver_ponyexpress {
 		$sinc_path = array();
 		for($i = 0; $i < count($new_path); $i++) {
 			for($j = 0; $j < count($actual_path); $j++) {
-				if(($actual_path[$j]->id_delivery == $new_path[$i]->id_delivery) && ($actual_path[$j]->pick_up == $new_path[$i]->type)){
+				if(($actual_path[$j]->id_delivery == $new_path[$i]->id_delivery) 
+						&& ($actual_path[$j]->pick_up == $new_path[$i]->type) 
+						&& $actual_path[$j]->valid == 1){
 					$sinc_path[$i] = $new_path[$i];
 					$sinc_path[$i]->email = $actual_path[$j]->recipient_email;
-					$actual_path[$j]->id_delivery = 0;
-					$actual_path[$j]->pick_up = -1;
+					$actual_path[$j]->valid = 0;
 					$found = true;
 					break;
 				}

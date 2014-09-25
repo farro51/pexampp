@@ -51,15 +51,6 @@ $(document).ready(function(){
 			showMess("Recipient's email wrong");
 			return false;
 		}
-		/*if(!validateAddress(address_s)) {
-			showMess("Not find sender's address");
-			return false;
-		}
-		
-		if(!validateAddress(address_r)) {
-			showMess("Not find recipient's address");
-			return false;
-		}*/
 		var params = "address_s=" + address_s + "&address_r=" + address_r;
 		if(window.XMLHttpRequest){
 			req = new XMLHttpRequest();
