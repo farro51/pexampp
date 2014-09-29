@@ -94,7 +94,6 @@ $(document).ready(function(){
 									if(req2.readyState==4 && (req2.status==200 || req2.status==0)){
 										progressbar.progressbar("destroy");
 										var obj = jQuery.parseJSON(req2.responseText);
-										
 										if (obj.successful == true) {
 											$('#dialog').html("").append("The tracking code is: <b>" + obj.tracking_code +
 																			"</b><br>Sended too to the email provided: " + email_s);
@@ -125,7 +124,6 @@ $(document).ready(function(){
 									}
 									else{
 										if(req2.readyState==4) {
-											alert(req2.responseText);
 											progressbar.progressbar("destroy");
 											$('#dialog').html("").append("Server error");
 											$('#dialog').dialog( "option", "buttons", [
@@ -255,50 +253,3 @@ function showMess(mess) {
 			   
     });
 }
-
-function newDelivery(name_s, email_s, address_s, name_r, email_r, address_r) {
-	
-}
-
-/*function validateAddress(address) {
-	params = { address: address, components : 'locality:Torino', sensor: 'false' };
-	params = $.param(params);
-	if(window.XMLHttpRequest){
-		req = new XMLHttpRequest();
-	}
-	else{ 
-		req = new ActiveXObject("Microsoft.XMLHTTP");
-	}
-	req.onreadystatechange=function(){
-		if(req.readyState==4 && (req.status==200 || req.status==0)){
-			var obj;
-			try {
-				obj = $.parseJSON(req.responseText);
-			}catch(err) {
-				alert("Malformed JSON\n" + err.message);
-				ctrl = 1;
-			}
-			if(obj.results[0].types.indexOf("street_address") > 0) {
-				ctrl = 2;
-			}
-			else {
-				ctrl = 1;
-			}
-		}
-	}
-	req.open("GET","http://maps.googleapis.com/maps/api/geocode/json?" + params,true);
-	req.send(null);
-	var i = 0;
-	while(ctrl = 0) {
-		i++;
-	}
-	alert(i);
-	if(ctrl == 1) {
-		ctrl = 0;
-		return false;
-	}
-	else {
-		ctrl = 0;
-		return true;
-	}
-}*/

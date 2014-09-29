@@ -159,9 +159,7 @@ class Driver_ponyexpress {
     	}
 		try {
 			if ($this->_connection->update_record($this->_prefix.'agent', $fields, $where)) {
-				if ($this->_connection->get_affected_rows() > 0) {
-					return true;
-				}
+				return true;
 			}
 		} catch (Exception $e) {
 			return false;
@@ -232,7 +230,6 @@ class Driver_ponyexpress {
 				'agent, path_agent WHERE status=' . $this->_connection->quote('logged', 'varchar') . ' AND id_agent=id';
 		$results = $this->_connection->getList($sql);
 		if(!$results) {
-			echo "false 1";
 			return false;
 		}
 		if (count($results) == 1) {
@@ -247,13 +244,11 @@ class Driver_ponyexpress {
 		//Sort the list of agents available for the nearest to sender location
 		$agents_sort_s = $this->getListNearAgents($results, $lat_s, $lon_s);
 		if (!$agents_sort_s) {
-			echo "false 2";
 			return false;
 		}	
 		//Sort the list of agents available for the nearest to recipient location
 		$agents_sort_r = $this->getListNearAgents($results, $lat_r, $lon_r);
 		if (!$agents_sort_r) {
-			echo "false 3";
 			return false;
 		}
 		
@@ -460,7 +455,7 @@ class Driver_ponyexpress {
 			if($distance == null) {
 				return false;
 			}
-			$arr_est += $distance->duration->value;
+			$arr_est += $distance->duration->value / 2;
 			
 			if ($order_path[$i] < (count($destinations) - 2)) {
 				$fields = array('p_order'=>$i, 'arrival_time_est'=>$arr_est);
@@ -606,7 +601,8 @@ class Driver_ponyexpress {
 					return "Database error";
 				}
 				if($path[$i]->type == 0) {
-					$this->sendMail($sinc_path[$i]->email, $title, $body . date("d-m-Y H:i:s", (time() + $time + (30*60))) . "<br/><br/>");
+					mail($sinc_path[$i]->email, $title, $body . date("d-m-Y H:i:s", (time() + $time + (30*60))) . "<br/><br/>");
+					//$this->sendMail($sinc_path[$i]->email, $title, $body . date("d-m-Y H:i:s", (time() + $time + (30*60))) . "<br/><br/>");
 				}
 			}
 			return true;

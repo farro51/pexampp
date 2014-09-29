@@ -226,12 +226,18 @@ class RestResource_Deliveries extends RestResource {
 				$this->_restGeneric->RestResponse->Content = $result;
 				return true;
 			}
-			$this->_queryDriver->sendMail($delivery->sender_email, 'Tracking credentials', 
+			mail($delivery->sender_email, 'Tracking credentials', 
+						"Hi, this email is automatically send to you from ponyexpress.com because a new delivery was created.
+						</br> The corrisponding Tracking code is: " . $delivery->tracking_code . "<br/><br/>");
+			mail($delivery->recipient_email, 'Delivery credentials', 
+						"Hi, this email is automatically send to you from ponyexpress.com because a new delivery was created.
+						</br> The corrisponding Delivery code is: " . $delivery->delivery_code . "<br/><br/>");
+			/*$this->_queryDriver->sendMail($delivery->sender_email, 'Tracking credentials', 
 						"Hi, this email is automatically send to you from ponyexpress.com because a new delivery was created.
 						</br> The corrisponding Tracking code is: " . $delivery->tracking_code . "<br/><br/>");
 			$this->_queryDriver->sendMail($delivery->recipient_email, 'Delivery credentials', 
 						"Hi, this email is automatically send to you from ponyexpress.com because a new delivery was created.
-						</br> The corrisponding Delivery code is: " . $delivery->delivery_code . "<br/><br/>");
+						</br> The corrisponding Delivery code is: " . $delivery->delivery_code . "<br/><br/>");*/
 			$res = $this->_queryDriver->sendNotificaPush($delivery->agent, "Update list of deliveries");
 			if(!$res) {
 				$result->successful = false;
